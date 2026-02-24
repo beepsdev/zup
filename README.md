@@ -320,7 +320,7 @@ ctx.sqlite.run('INSERT INTO my_plugin_events (data) VALUES ($data)', { data: 'te
 const agent = await createAgent({
   api: {
     port: 3000,
-    authToken: process.env.YORI_API_TOKEN,
+    authToken: process.env.ZUP_API_TOKEN,
   },
 });
 
