@@ -1,0 +1,31 @@
+{
+  "name": "zup",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun run packages/core/src/index.ts",
+    "docs:dev": "bun --cwd apps/docs dev",
+    "docs:build": "bun --cwd apps/docs build",
+    "docs:preview": "bun --cwd apps/docs preview",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run typecheck && bun test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0",
+    "defu": "^6.1.4",
+    "google-auth-library": "^9.11.0",
+    "openai": "^6.9.1",
+    "winston": "^3.18.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
