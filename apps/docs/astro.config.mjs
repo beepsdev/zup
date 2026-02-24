@@ -9,6 +9,11 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Zup Docs',
+      logo: {
+        light: './src/assets/blocky-zup.svg',
+        dark: './src/assets/blocky-zup-inverted.svg',
+        replacesTitle: true,
+      },
       description: 'Open source AI SRE agent framework documentation.',
       sidebar: [
         {

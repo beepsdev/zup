@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="./assets/blocky-zup.svg" alt="Zup" width="520" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/blocky-zup-inverted.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="./assets/blocky-zup.svg" />
+    <img src="./assets/blocky-zup.svg" alt="Zup" width="520" />
+  </picture>
 </p>
 
 Zup is an open source reliability agent that continuously runs the OODA loop (Observe, Orient, Decide, Act) on your production systems.

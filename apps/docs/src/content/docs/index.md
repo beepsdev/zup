@@ -1,5 +1,5 @@
 ---
-title: Zup
+title: ZUP
 description: Open source AI SRE agent framework built around the OODA loop.
 ---
 
