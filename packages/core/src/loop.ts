@@ -365,9 +365,7 @@ async function runActPhase(
       success: false,
       error: 'Approval required',
       duration: 0,
-      metrics: {
-        approvalId: approval.id,
-      },
+      output: { approvalId: approval.id },
     });
 
     return actionResults;

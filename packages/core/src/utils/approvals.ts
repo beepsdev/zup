@@ -98,7 +98,7 @@ export function resolveApproval(
   }
 
   const now = new Date().toISOString();
-  const item = queue.pending[index];
+  const item = queue.pending[index]!;
   const resolved: ApprovalItem = {
     ...item,
     status,
@@ -125,7 +125,7 @@ export function purgeExpiredApprovals(
   const expired: ApprovalItem[] = [];
 
   for (let i = queue.pending.length - 1; i >= 0; i -= 1) {
-    const item = queue.pending[i];
+    const item = queue.pending[i]!;
     let expiresAtMs: number | undefined;
     if (item.expiresAt) {
       expiresAtMs = Date.parse(item.expiresAt);

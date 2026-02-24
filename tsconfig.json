@@ -29,5 +29,6 @@
       "zupdev": ["./packages/core/src/index.ts"],
       "zupdev/plugins/*": ["./packages/plugins/*/index.ts"]
     }
-  }
+  },
+  "include": ["packages", "examples"]
 }

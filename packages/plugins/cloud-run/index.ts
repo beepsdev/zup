@@ -508,7 +508,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
           observations.push({
             source: 'cloud-run/connection-error',
             timestamp: new Date(),
-            type: 'error',
+            type: 'event',
             severity: 'error',
             data: {
               error: err instanceof Error ? err.message : String(err),
@@ -534,7 +534,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
               observations.push({
                 source: 'cloud-run/connection-error',
                 timestamp: new Date(),
-                type: 'error',
+                type: 'event',
                 severity: 'error',
                 data: {
                   projectId: project.projectId,
@@ -718,7 +718,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
           observations.push({
             source: 'cloud-run/connection-error',
             timestamp: new Date(),
-            type: 'error',
+            type: 'event',
             severity: 'error',
             data: {
               error: err instanceof Error ? err.message : String(err),
@@ -744,7 +744,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
               observations.push({
                 source: 'cloud-run/connection-error',
                 timestamp: new Date(),
-                type: 'error',
+                type: 'event',
                 severity: 'error',
                 data: {
                   projectId: project.projectId,
@@ -808,7 +808,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
                 observations.push({
                   source: 'cloud-run/connection-error',
                   timestamp: new Date(),
-                  type: 'error',
+                  type: 'event',
                   severity: 'error',
                   data: {
                     projectId: project.projectId,
@@ -843,7 +843,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
           observations.push({
             source: 'cloud-run/connection-error',
             timestamp: new Date(),
-            type: 'error',
+            type: 'event',
             severity: 'error',
             data: {
               error: err instanceof Error ? err.message : String(err),
@@ -870,7 +870,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
               observations.push({
                 source: 'cloud-run/connection-error',
                 timestamp: new Date(),
-                type: 'error',
+                type: 'event',
                 severity: 'error',
                 data: {
                   projectId: project.projectId,
@@ -943,7 +943,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
                 observations.push({
                   source: 'cloud-run/connection-error',
                   timestamp: new Date(),
-                  type: 'error',
+                  type: 'event',
                   severity: 'error',
                   data: {
                     projectId: project.projectId,
@@ -1137,13 +1137,18 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
             };
           }
 
+          const projectId = params.projectId as string;
+          const region = params.region as string;
+          const service = params.service as string;
+          const traffic = params.traffic as CloudRunTrafficTarget[];
+
           const start = Date.now();
           const token = await getAccessToken(ctx, pluginCtx);
           await updateServiceTraffic(
-            params.projectId,
-            params.region,
-            params.service,
-            params.traffic,
+            projectId,
+            region,
+            service,
+            traffic,
             token,
             pluginCtx.options.apiBaseUrl
           );
@@ -1152,7 +1157,7 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
             action: 'set-traffic',
             success: true,
             duration: Date.now() - start,
-            output: `Updated traffic for ${params.service}`,
+            output: `Updated traffic for ${service}`,
           };
         },
         dryRun: async (params) => {
@@ -1185,9 +1190,14 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
             };
           }
 
-          const key = buildServiceKey(params.projectId, params.region, params.service);
+          const projectId = params.projectId as string;
+          const region = params.region as string;
+          const service = params.service as string;
+          const revision = params.revision as string | undefined;
+
+          const key = buildServiceKey(projectId, region, service);
           const snapshot = pluginCtx.snapshots.get(key);
-          const targetRevision = params.revision ?? snapshot?.lastKnownGoodRevision;
+          const targetRevision = revision ?? snapshot?.lastKnownGoodRevision;
 
           if (!targetRevision) {
             return {
@@ -1201,9 +1211,9 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
           const start = Date.now();
           const token = await getAccessToken(ctx, pluginCtx);
           await updateServiceTraffic(
-            params.projectId,
-            params.region,
-            params.service,
+            projectId,
+            region,
+            service,
             [{ revision: targetRevision, percent: 100 }],
             token,
             pluginCtx.options.apiBaseUrl
@@ -1213,12 +1223,12 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
             action: 'rollback',
             success: true,
             duration: Date.now() - start,
-            output: `Rolled back ${params.service} to ${targetRevision}`,
+            output: `Rolled back ${service} to ${targetRevision}`,
           };
         },
         dryRun: async (params, ctx) => {
           const pluginCtx = ctx.cloudRun as CloudRunPluginContext;
-          const key = buildServiceKey(params.projectId, params.region, params.service);
+          const key = buildServiceKey(params.projectId as string, params.region as string, params.service as string);
           const snapshot = pluginCtx.snapshots.get(key);
           const targetRevision = params.revision ?? snapshot?.lastKnownGoodRevision ?? 'unknown';
           return `Would roll back ${params.service} to ${targetRevision}`;
@@ -1244,7 +1254,8 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
         auth: true,
         handler: async (ctx) => {
           const pluginCtx = ctx.context.cloudRun as CloudRunPluginContext;
-          const { projectId, region } = ctx.params;
+          const projectId = ctx.params.projectId!;
+          const region = ctx.params.region!;
           const services = Array.from(pluginCtx.snapshots.values()).filter(
             snapshot => snapshot.projectId === projectId && snapshot.region === region
           );
@@ -1258,7 +1269,9 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
         auth: true,
         handler: async (ctx) => {
           const pluginCtx = ctx.context.cloudRun as CloudRunPluginContext;
-          const { projectId, region, service } = ctx.params;
+          const projectId = ctx.params.projectId!;
+          const region = ctx.params.region!;
+          const service = ctx.params.service!;
           const key = buildServiceKey(projectId, region, service);
           const snapshot = pluginCtx.snapshots.get(key);
           if (!snapshot) {
@@ -1274,7 +1287,9 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
         auth: true,
         handler: async (ctx) => {
           const pluginCtx = ctx.context.cloudRun as CloudRunPluginContext;
-          const { projectId, region, service } = ctx.params;
+          const projectId = ctx.params.projectId!;
+          const region = ctx.params.region!;
+          const service = ctx.params.service!;
 
           let token: string;
           try {
@@ -1309,10 +1324,12 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
             return error('Read-only mode enabled', 403);
           }
 
-          const { projectId, region, service } = ctx.params;
+          const projectId = ctx.params.projectId!;
+          const region = ctx.params.region!;
+          const service = ctx.params.service!;
           let body: { traffic?: CloudRunTrafficTarget[] };
           try {
-            body = await ctx.request.json();
+            body = await ctx.request.json() as { traffic?: CloudRunTrafficTarget[] };
           } catch (err) {
             return error('Invalid JSON body', 400);
           }
@@ -1349,7 +1366,9 @@ export const cloudRun = (options: CloudRunPluginOptions) => {
             return error('Read-only mode enabled', 403);
           }
 
-          const { projectId, region, service } = ctx.params;
+          const projectId = ctx.params.projectId!;
+          const region = ctx.params.region!;
+          const service = ctx.params.service!;
           const key = buildServiceKey(projectId, region, service);
           const snapshot = pluginCtx.snapshots.get(key);
           const targetRevision = snapshot?.lastKnownGoodRevision;
