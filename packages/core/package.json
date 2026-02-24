@@ -9,8 +9,11 @@
     "./types": "./src/types/index.ts"
   },
   "dependencies": {
-    "zod": "^4.1.12",
-    "defu": "^6.1.4"
+    "@anthropic-ai/sdk": "^0.71.0",
+    "defu": "^6.1.4",
+    "google-auth-library": "^9.11.0",
+    "openai": "^6.9.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/bun": "latest"
