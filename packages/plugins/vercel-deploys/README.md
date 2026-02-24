@@ -12,7 +12,7 @@ Observes recent deployments from Vercel and feeds that context into the OODA loo
 
 ## Installation
 
-The plugin is included in the Zup monorepo. Import it from `@beepsdev/zup/plugins/vercel-deploys`.
+The plugin is included in the Zup monorepo. Import it from `zupdev/plugins/vercel-deploys`.
 
 ## Configuration
 
@@ -25,8 +25,8 @@ The plugin is included in the Zup monorepo. Import it from `@beepsdev/zup/plugin
 3. Set the token in your environment or pass it directly to the plugin
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { vercelDeploys } from '@beepsdev/zup/plugins/vercel-deploys';
+import { createAgent } from 'zupdev';
+import { vercelDeploys } from 'zupdev/plugins/vercel-deploys';
 
 const agent = await createAgent({
   plugins: [
@@ -228,8 +228,8 @@ The plugin stores the following state per project:
 ## Example Usage
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { vercelDeploys } from '@beepsdev/zup/plugins/vercel-deploys';
+import { createAgent } from 'zupdev';
+import { vercelDeploys } from 'zupdev/plugins/vercel-deploys';
 
 async function main() {
   const agent = await createAgent({

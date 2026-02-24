@@ -94,7 +94,7 @@ The atomic rename prevents partial writes from corrupting the state file. If a w
 ### Database
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
+import { createAgent } from 'zupdev';
 
 const agent = await createAgent({
   name: 'my-agent',

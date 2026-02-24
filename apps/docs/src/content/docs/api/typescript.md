@@ -1,13 +1,13 @@
 ---
 title: TypeScript API Reference
-description: Complete reference for all exported functions, types, and interfaces from @beepsdev/zup.
+description: Complete reference for all exported functions, types, and interfaces from zupdev.
 ---
 
-All public APIs are exported from the `@beepsdev/zup` package. Types can also be imported from `@beepsdev/zup/types`.
+All public APIs are exported from the `zupdev` package. Types can also be imported from `zupdev/types`.
 
 ```ts
-import { createAgent, definePlugin, createObserver } from '@beepsdev/zup';
-import type { AgentContext, Observation } from '@beepsdev/zup';
+import { createAgent, definePlugin, createObserver } from 'zupdev';
+import type { AgentContext, Observation } from 'zupdev';
 ```
 
 ## Agent
@@ -773,7 +773,7 @@ import {
   createSQLiteCapability,
   createEmbeddingCapability,
   createLLMCapability,
-} from '@beepsdev/zup';
+} from 'zupdev';
 
 // Standalone state store with file persistence
 const state = createStateStore({

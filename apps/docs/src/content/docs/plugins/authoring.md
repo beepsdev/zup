@@ -10,7 +10,7 @@ This guide walks through building a plugin from scratch. By the end you will hav
 A plugin is a function that returns a `ZupPlugin` object via `definePlugin()`:
 
 ```ts
-import { definePlugin } from '@beepsdev/zup';
+import { definePlugin } from 'zupdev';
 
 export const myPlugin = (options?: { threshold?: number }) => definePlugin({
   id: 'my-plugin',
@@ -49,8 +49,8 @@ All fields except `id` are optional. Include only what your plugin needs.
 Observers run during the Observe phase and return `Observation[]`:
 
 ```ts
-import { definePlugin, createObserver } from '@beepsdev/zup';
-import type { Observation, AgentContext } from '@beepsdev/zup';
+import { definePlugin, createObserver } from 'zupdev';
+import type { Observation, AgentContext } from 'zupdev';
 
 export const diskMonitor = (options: { mountPath: string; thresholdPercent?: number }) => {
   const threshold = options.thresholdPercent ?? 90;
@@ -103,8 +103,8 @@ export const diskMonitor = (options: { mountPath: string; thresholdPercent?: num
 Orienters analyze observations and return a `SituationAssessment`:
 
 ```ts
-import { createOrienter } from '@beepsdev/zup';
-import type { Observation, SituationAssessment } from '@beepsdev/zup';
+import { createOrienter } from 'zupdev';
+import type { Observation, SituationAssessment } from 'zupdev';
 
 // Inside your definePlugin call:
 orienters: {
@@ -151,7 +151,7 @@ orienters: {
 Decision strategies evaluate the situation and propose an action:
 
 ```ts
-import { createDecisionStrategy } from '@beepsdev/zup';
+import { createDecisionStrategy } from 'zupdev';
 
 // Inside your definePlugin call:
 decisionStrategies: {
@@ -194,7 +194,7 @@ decisionStrategies: {
 Actions execute remediation. They can have parameter validation (Zod), autonomy controls, and rollback:
 
 ```ts
-import { createAction } from '@beepsdev/zup';
+import { createAction } from 'zupdev';
 import { z } from 'zod';
 
 // Inside your definePlugin call:
@@ -264,7 +264,7 @@ actions: {
 Plugins can register REST API endpoints:
 
 ```ts
-import { createEndpoint, json } from '@beepsdev/zup';
+import { createEndpoint, json } from 'zupdev';
 
 // Inside your definePlugin call:
 endpoints: {
@@ -405,8 +405,8 @@ import {
   createAction,
   createEndpoint,
   json,
-} from '@beepsdev/zup';
-import type { AgentContext, Observation, SituationAssessment } from '@beepsdev/zup';
+} from 'zupdev';
+import type { AgentContext, Observation, SituationAssessment } from 'zupdev';
 import { z } from 'zod';
 
 export type DiskMonitorOptions = {
@@ -541,7 +541,7 @@ export const diskMonitor = (options: DiskMonitorOptions) => {
 Use it:
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
+import { createAgent } from 'zupdev';
 import { diskMonitor } from './plugins/disk-monitor';
 
 const agent = await createAgent({

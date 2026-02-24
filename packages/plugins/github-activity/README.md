@@ -24,14 +24,14 @@ Unlike deployment-focused plugins, the GitHub Activity plugin provides **code ch
 The plugin is included in the Zup monorepo. Import it from the plugins directory:
 
 ```typescript
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
+import { githubActivity } from 'zupdev/plugins/github-activity';
 ```
 
 ## Configuration
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
+import { createAgent } from 'zupdev';
+import { githubActivity } from 'zupdev/plugins/github-activity';
 
 const agent = await createAgent({
   plugins: [
@@ -396,8 +396,8 @@ githubActivity({
 ## Example Usage
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
+import { createAgent } from 'zupdev';
+import { githubActivity } from 'zupdev/plugins/github-activity';
 
 const agent = await createAgent({
   name: 'SRE Agent',

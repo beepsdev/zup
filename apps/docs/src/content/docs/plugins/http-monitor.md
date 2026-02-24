@@ -8,8 +8,8 @@ The `http-monitor` plugin watches HTTP endpoints for availability and can automa
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -295,8 +295,8 @@ All three endpoints require authentication (Bearer token) by default.
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   name: 'infra-monitor',

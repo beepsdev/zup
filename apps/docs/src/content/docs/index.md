@@ -54,8 +54,8 @@ Plugins contribute components at each phase. The core framework orchestrates the
 ## Quick example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   name: 'my-sre',

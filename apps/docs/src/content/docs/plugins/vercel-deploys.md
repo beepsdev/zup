@@ -8,8 +8,8 @@ The `vercel-deploys` plugin monitors Vercel deployments across multiple projects
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { vercelDeploys } from '@beepsdev/zup/plugins/vercel-deploys';
+import { createAgent } from 'zupdev';
+import { vercelDeploys } from 'zupdev/plugins/vercel-deploys';
 
 const agent = await createAgent({
   name: 'vercel-agent',
@@ -177,8 +177,8 @@ The plugin tracks these Vercel deployment states:
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { vercelDeploys } from '@beepsdev/zup/plugins/vercel-deploys';
+import { createAgent } from 'zupdev';
+import { vercelDeploys } from 'zupdev/plugins/vercel-deploys';
 
 const agent = await createAgent({
   name: 'vercel-monitor',

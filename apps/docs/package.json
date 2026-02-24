@@ -1,5 +1,5 @@
 {
-  "name": "@beepsdev/zup-docs",
+  "name": "zupdev-docs",
   "private": true,
   "type": "module",
   "scripts": {

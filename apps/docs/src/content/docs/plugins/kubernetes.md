@@ -8,8 +8,8 @@ The `kubernetes` plugin monitors Kubernetes clusters by querying pod, deployment
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { kubernetes } from '@beepsdev/zup/plugins/kubernetes';
+import { createAgent } from 'zupdev';
+import { kubernetes } from 'zupdev/plugins/kubernetes';
 
 const agent = await createAgent({
   name: 'k8s-agent',
@@ -184,8 +184,8 @@ Deletes a pod. Requires `readOnly: false`.
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { kubernetes } from '@beepsdev/zup/plugins/kubernetes';
+import { createAgent } from 'zupdev';
+import { kubernetes } from 'zupdev/plugins/kubernetes';
 
 const agent = await createAgent({
   name: 'k8s-monitor',

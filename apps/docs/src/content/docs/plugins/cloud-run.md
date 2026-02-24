@@ -8,8 +8,8 @@ The `cloud-run` plugin monitors Google Cloud Run services across multiple projec
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { cloudRun } from '@beepsdev/zup/plugins/cloud-run';
+import { createAgent } from 'zupdev';
+import { cloudRun } from 'zupdev/plugins/cloud-run';
 
 const agent = await createAgent({
   name: 'cloud-run-agent',
@@ -162,8 +162,8 @@ Sets traffic allocation for a service. Requires `readOnly: false`.
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { cloudRun } from '@beepsdev/zup/plugins/cloud-run';
+import { createAgent } from 'zupdev';
+import { cloudRun } from 'zupdev/plugins/cloud-run';
 
 const agent = await createAgent({
   name: 'cloud-run-monitor',

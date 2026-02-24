@@ -17,7 +17,7 @@ Fly.io doesn't have a dedicated "deployments" endpoint. Instead, this plugin det
 
 ## Installation
 
-The plugin is included in the Zup monorepo. Import it from `@beepsdev/zup/plugins/fly-machines`.
+The plugin is included in the Zup monorepo. Import it from `zupdev/plugins/fly-machines`.
 
 ## Configuration
 
@@ -32,8 +32,8 @@ fly tokens create
 Then configure the plugin with the token:
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { flyMachines } from '@beepsdev/zup/plugins/fly-machines';
+import { createAgent } from 'zupdev';
+import { flyMachines } from 'zupdev/plugins/fly-machines';
 
 const agent = await createAgent({
   plugins: [
@@ -254,8 +254,8 @@ The plugin stores the following state per app:
 ## Example Usage
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { flyMachines } from '@beepsdev/zup/plugins/fly-machines';
+import { createAgent } from 'zupdev';
+import { flyMachines } from 'zupdev/plugins/fly-machines';
 
 async function main() {
   const agent = await createAgent({

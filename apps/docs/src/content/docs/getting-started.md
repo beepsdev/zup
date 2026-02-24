@@ -6,7 +6,7 @@ description: Install Zup and run your first OODA loop in under five minutes.
 ## Install
 
 ```bash
-bun add @beepsdev/zup
+bun add zupdev
 ```
 
 ## Minimal agent
@@ -14,7 +14,7 @@ bun add @beepsdev/zup
 Create an agent with no plugins and run a single loop:
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
+import { createAgent } from 'zupdev';
 
 const agent = await createAgent({ name: 'my-agent' });
 const result = await agent.runLoop();
@@ -30,8 +30,8 @@ Without plugins there are no observers, so the loop completes instantly with zer
 Install the http-monitor plugin to watch your endpoints:
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -88,9 +88,9 @@ llm: {
 The historian plugin stores incident history in SQLite and uses it for RAG during future loops:
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
+import { historianPlugin } from 'zupdev/plugins/historian';
 
 const agent = await createAgent({
   name: 'my-agent',

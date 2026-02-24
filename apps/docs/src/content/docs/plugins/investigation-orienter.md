@@ -10,9 +10,9 @@ This is similar to how an on-call engineer would investigate an incident -- chec
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { investigationOrienter } from '@beepsdev/zup/plugins/investigation-orienter';
-import { queryLogs, queryMetrics, checkHealth } from '@beepsdev/zup/plugins/investigation-orienter/tools';
+import { createAgent } from 'zupdev';
+import { investigationOrienter } from 'zupdev/plugins/investigation-orienter';
+import { queryLogs, queryMetrics, checkHealth } from 'zupdev/plugins/investigation-orienter/tools';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -91,7 +91,7 @@ type InvestigationResult = {
 Use `createInvestigationTool` to define tools with type-safe parameters:
 
 ```ts
-import { createInvestigationTool } from '@beepsdev/zup/plugins/investigation-orienter/tools';
+import { createInvestigationTool } from 'zupdev/plugins/investigation-orienter/tools';
 import { z } from 'zod';
 
 const queryLogs = createInvestigationTool({
@@ -130,7 +130,7 @@ The plugin ships with reference tool implementations that demonstrate the tool p
 Import all reference tools as a bundle:
 
 ```ts
-import { referenceTools } from '@beepsdev/zup/plugins/investigation-orienter/tools';
+import { referenceTools } from 'zupdev/plugins/investigation-orienter/tools';
 ```
 
 ## OODA phase contributions
@@ -147,10 +147,10 @@ When observations meet the severity threshold, spawns a multi-turn LLM investiga
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { investigationOrienter } from '@beepsdev/zup/plugins/investigation-orienter';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
-import { createInvestigationTool } from '@beepsdev/zup/plugins/investigation-orienter/tools';
+import { createAgent } from 'zupdev';
+import { investigationOrienter } from 'zupdev/plugins/investigation-orienter';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
+import { createInvestigationTool } from 'zupdev/plugins/investigation-orienter/tools';
 import { z } from 'zod';
 
 // Define tools that integrate with your observability stack

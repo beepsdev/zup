@@ -23,8 +23,8 @@ export GCP_ACCESS_TOKEN="$(gcloud auth application-default print-access-token)"
 ## Installation
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { cloudRun } from '@beepsdev/zup/plugins/cloud-run';
+import { createAgent } from 'zupdev';
+import { cloudRun } from 'zupdev/plugins/cloud-run';
 
 const agent = await createAgent({
   plugins: [

@@ -15,9 +15,9 @@ bun install
 ## Usage
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
+import { historianPlugin } from 'zupdev/plugins/historian';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -59,7 +59,7 @@ Each loop iteration:
 Plugins provide capabilities at each phase:
 
 ```typescript
-import { definePlugin, createObserver, createOrienter, createDecisionStrategy, createAction } from '@beepsdev/zup';
+import { definePlugin, createObserver, createOrienter, createDecisionStrategy, createAction } from 'zupdev';
 
 export const myPlugin = () => definePlugin({
   id: 'my-plugin',
@@ -137,7 +137,7 @@ Available plugins in this repo:
 Health check monitoring with automatic restart capabilities.
 
 ```typescript
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 httpMonitor({
   endpoints: [{
@@ -162,7 +162,7 @@ httpMonitor({
 Monitor Cloud Run services and rollouts with optional auto-rollback.
 
 ```typescript
-import { cloudRun } from '@beepsdev/zup/plugins/cloud-run';
+import { cloudRun } from 'zupdev/plugins/cloud-run';
 
 cloudRun({
   projects: [
@@ -184,7 +184,7 @@ cloudRun({
 Monitor and manage Fly.io machines.
 
 ```typescript
-import { flyMachines } from '@beepsdev/zup/plugins/fly-machines';
+import { flyMachines } from 'zupdev/plugins/fly-machines';
 
 flyMachines({
   token: process.env.FLY_API_TOKEN,
@@ -201,7 +201,7 @@ flyMachines({
 Monitor Vercel deployments.
 
 ```typescript
-import { vercelDeploys } from '@beepsdev/zup/plugins/vercel-deploys';
+import { vercelDeploys } from 'zupdev/plugins/vercel-deploys';
 
 vercelDeploys({
   token: process.env.VERCEL_TOKEN,
@@ -218,7 +218,7 @@ vercelDeploys({
 Monitor GitHub repository activity including commits, PRs, issues, and deployments.
 
 ```typescript
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
+import { githubActivity } from 'zupdev/plugins/github-activity';
 
 githubActivity({
   token: process.env.GITHUB_TOKEN,
@@ -235,7 +235,7 @@ githubActivity({
 Store incident resolutions and use them as RAG context for future incidents.
 
 ```typescript
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
+import { historianPlugin } from 'zupdev/plugins/historian';
 
 historianPlugin({
   minConfidence: 0.75,        // Only store high-confidence resolutions
@@ -255,7 +255,7 @@ Requires SQLite configured on the agent. When sqlite-vec extension is available,
 Monitor Kubernetes cluster health and optionally perform write operations.
 
 ```typescript
-import { kubernetes } from '@beepsdev/zup/plugins/kubernetes';
+import { kubernetes } from 'zupdev/plugins/kubernetes';
 
 kubernetes({
   clusterName: 'prod-cluster',
@@ -269,7 +269,7 @@ kubernetes({
 Run a deep, tool-calling investigation loop during the Orient phase.
 
 ```typescript
-import { investigationOrienter, type InvestigationTool } from '@beepsdev/zup/plugins/investigation-orienter';
+import { investigationOrienter, type InvestigationTool } from 'zupdev/plugins/investigation-orienter';
 
 const tools: InvestigationTool[] = [
   // Provide your own tools (logs, metrics, deploys, etc.)

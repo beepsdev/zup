@@ -10,7 +10,7 @@ Monitor Kubernetes cluster health and perform operations like restarting deploym
 ## Installation
 
 ```typescript
-import { kubernetes } from '@beepsdev/zup/plugins/kubernetes';
+import { kubernetes } from 'zupdev/plugins/kubernetes';
 
 const agent = createAgent({
   plugins: [

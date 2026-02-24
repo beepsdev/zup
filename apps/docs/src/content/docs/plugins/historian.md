@@ -10,8 +10,8 @@ As incidents are resolved, the historian accumulates a searchable record of what
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
+import { createAgent } from 'zupdev';
+import { historianPlugin } from 'zupdev/plugins/historian';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -110,9 +110,9 @@ Vector search requires the sqlite-vec extension. If the extension is not availab
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { historianPlugin } from 'zupdev/plugins/historian';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   name: 'infra-agent',

@@ -10,7 +10,7 @@ Zup provides an optional SQLite database layer built on Bun's native `bun:sqlite
 Set the `sqlite` field in your agent options:
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
+import { createAgent } from 'zupdev';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -205,7 +205,7 @@ The embedding capability generates vector representations of text for use with s
 ### Configuration
 
 ```ts
-import { createEmbeddingCapability } from '@beepsdev/zup';
+import { createEmbeddingCapability } from 'zupdev';
 
 const embedding = createEmbeddingCapability({
   provider: 'openai',
@@ -253,8 +253,8 @@ The `historian` plugin is the primary consumer of both SQLite and embeddings. It
 ### Configuration
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
+import { createAgent } from 'zupdev';
+import { historianPlugin } from 'zupdev/plugins/historian';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -278,7 +278,7 @@ const agent = await createAgent({
 If you need SQLite outside of an agent context, you can create the capability directly:
 
 ```ts
-import { createSQLiteCapability } from '@beepsdev/zup';
+import { createSQLiteCapability } from 'zupdev';
 
 const sqlite = createSQLiteCapability({
   path: './my-database.db',

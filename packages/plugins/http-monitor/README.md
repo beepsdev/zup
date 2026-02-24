@@ -15,8 +15,8 @@ Production-ready plugin for monitoring HTTP endpoints and automatically restarti
 ## Installation
 
 ```typescript
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   plugins: [

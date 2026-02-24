@@ -14,7 +14,7 @@ Set the `llm` field in your agent options:
 ### Anthropic
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
+import { createAgent } from 'zupdev';
 
 const agent = await createAgent({
   name: 'my-agent',
@@ -314,7 +314,7 @@ All generation methods accept an optional `GenerateOptions` object:
 Plugins access the LLM through `ctx.llm`. Always check for its existence first, since LLM configuration is optional:
 
 ```ts
-import { definePlugin, createOrienter } from '@beepsdev/zup';
+import { definePlugin, createOrienter } from 'zupdev';
 
 export const myPlugin = () => definePlugin({
   id: 'my-plugin',
@@ -353,7 +353,7 @@ export const myPlugin = () => definePlugin({
 The `investigation-orienter` plugin is a production example of LLM-powered orientation. It uses `ctx.llm.chat` with tool calling to run a multi-turn investigation loop within the Orient phase:
 
 ```ts
-import { investigationOrienter } from '@beepsdev/zup/plugins/investigation-orienter';
+import { investigationOrienter } from 'zupdev/plugins/investigation-orienter';
 
 const agent = await createAgent({
   llm: {
@@ -388,7 +388,7 @@ The investigation orienter checks whether any observation meets the `triggerSeve
 If you need LLM access outside of an agent context, you can create a provider directly:
 
 ```ts
-import { createLLMProvider, createLLMCapability } from '@beepsdev/zup';
+import { createLLMProvider, createLLMCapability } from 'zupdev';
 
 // Create a raw provider
 const provider = createLLMProvider({

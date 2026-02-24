@@ -8,9 +8,9 @@ The `createAgent(options)` function accepts an `AgentOptions` object. All fields
 ## Complete example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
+import { createAgent } from 'zupdev';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
+import { historianPlugin } from 'zupdev/plugins/historian';
 
 const agent = await createAgent({
   // Identity

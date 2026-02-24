@@ -8,7 +8,7 @@ description: Catalog of built-in plugins and plugin architecture summary.
 Plugins are the primary extension mechanism in Zup. Each plugin is a function that returns a `ZupPlugin` object containing components for one or more OODA phases.
 
 ```ts
-import { definePlugin, createObserver } from '@beepsdev/zup';
+import { definePlugin, createObserver } from 'zupdev';
 
 export const myPlugin = (options?: MyPluginOptions) => definePlugin({
   id: 'my-plugin',
@@ -27,14 +27,14 @@ Plugins are initialized sequentially in the order they appear in the `plugins` a
 Import plugins from their subpath:
 
 ```ts
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
-import { historianPlugin } from '@beepsdev/zup/plugins/historian';
-import { investigationOrienter } from '@beepsdev/zup/plugins/investigation-orienter';
-import { kubernetes } from '@beepsdev/zup/plugins/kubernetes';
-import { cloudRun } from '@beepsdev/zup/plugins/cloud-run';
-import { flyMachines } from '@beepsdev/zup/plugins/fly-machines';
-import { vercelDeploys } from '@beepsdev/zup/plugins/vercel-deploys';
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
+import { historianPlugin } from 'zupdev/plugins/historian';
+import { investigationOrienter } from 'zupdev/plugins/investigation-orienter';
+import { kubernetes } from 'zupdev/plugins/kubernetes';
+import { cloudRun } from 'zupdev/plugins/cloud-run';
+import { flyMachines } from 'zupdev/plugins/fly-machines';
+import { vercelDeploys } from 'zupdev/plugins/vercel-deploys';
+import { githubActivity } from 'zupdev/plugins/github-activity';
 ```
 
 ## Built-in plugins

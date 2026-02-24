@@ -332,7 +332,7 @@ type ApprovalQueue = {
 
 ### State store functions
 
-These utility functions are exported from `@beepsdev/zup` for advanced use cases:
+These utility functions are exported from `zupdev` for advanced use cases:
 
 | Function | Description |
 |---|---|

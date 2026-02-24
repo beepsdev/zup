@@ -8,8 +8,8 @@ The `github-activity` plugin monitors GitHub repositories for recent commits and
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
+import { createAgent } from 'zupdev';
+import { githubActivity } from 'zupdev/plugins/github-activity';
 
 const agent = await createAgent({
   name: 'github-agent',
@@ -263,9 +263,9 @@ Fetches the full diff for a specific commit on-demand. This endpoint makes a liv
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { githubActivity } from '@beepsdev/zup/plugins/github-activity';
-import { httpMonitor } from '@beepsdev/zup/plugins/http-monitor';
+import { createAgent } from 'zupdev';
+import { githubActivity } from 'zupdev/plugins/github-activity';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 const agent = await createAgent({
   name: 'change-tracker',

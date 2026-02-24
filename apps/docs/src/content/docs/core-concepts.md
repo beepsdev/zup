@@ -31,7 +31,7 @@ Plugins also have lifecycle hooks: `onLoopStart`, `onObserve`, `onOrient`, `onDe
 A minimal plugin:
 
 ```ts
-import { definePlugin, createObserver } from '@beepsdev/zup';
+import { definePlugin, createObserver } from 'zupdev';
 
 export const myPlugin = () => definePlugin({
   id: 'my-plugin',
@@ -56,7 +56,7 @@ See [Plugin Overview](/docs/plugins/) for the full catalog and [Writing a Plugin
 ## Agent lifecycle
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
+import { createAgent } from 'zupdev';
 
 // 1. Create -- plugins are initialized, capabilities registered
 const agent = await createAgent({ name: 'my-agent', plugins: [...] });

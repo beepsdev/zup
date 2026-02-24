@@ -26,8 +26,8 @@
 
     // Path aliases
     "paths": {
-      "@beepsdev/zup": ["./packages/core/src/index.ts"],
-      "@beepsdev/zup/plugins/*": ["./packages/plugins/*/index.ts"]
+      "zupdev": ["./packages/core/src/index.ts"],
+      "zupdev/plugins/*": ["./packages/plugins/*/index.ts"]
     }
   }
 }

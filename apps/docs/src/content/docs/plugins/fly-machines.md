@@ -8,8 +8,8 @@ The `fly-machines` plugin monitors Fly.io machines across multiple apps. It trac
 ## Installation
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { flyMachines } from '@beepsdev/zup/plugins/fly-machines';
+import { createAgent } from 'zupdev';
+import { flyMachines } from 'zupdev/plugins/fly-machines';
 
 const agent = await createAgent({
   name: 'fly-agent',
@@ -186,8 +186,8 @@ Machines with the same new image digest are grouped into a single deployment eve
 ## Full example
 
 ```ts
-import { createAgent } from '@beepsdev/zup';
-import { flyMachines } from '@beepsdev/zup/plugins/fly-machines';
+import { createAgent } from 'zupdev';
+import { flyMachines } from 'zupdev/plugins/fly-machines';
 
 const agent = await createAgent({
   name: 'fly-monitor',
