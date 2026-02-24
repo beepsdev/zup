@@ -10,6 +10,7 @@ import { initializePlugins } from './plugin';
 import { runOODALoop, executeActionById } from './loop';
 import { createApiServer } from './api/server';
 import { registerCoreRoutes } from './api/routes';
+import { registerRunRoutes } from './api/run-routes';
 import type { ApiServer } from './api/types';
 import { createLLMCapability } from './llm';
 import { createSQLiteCapability } from './db';
@@ -154,6 +155,7 @@ export async function createAgent(options: AgentOptions = {}) {
 
       const server = createApiServer(context, apiConfig);
       registerCoreRoutes(server.route, this);
+      registerRunRoutes(server.route, this);
 
       for (const plugin of plugins) {
         if (plugin.endpoints) {

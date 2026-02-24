@@ -9,6 +9,7 @@ import type {
 } from './types/index';
 import { executePluginHooks } from './plugin';
 import { enqueueApproval, purgeExpiredApprovals, DEFAULT_APPROVAL_TTL_MS } from './utils/approvals';
+import { listRuns, updateRunStatus, runToObservation, buildRunResult, sendCallback } from './runs';
 
 function isObserveHookResult(x: unknown): x is { observations?: Observation[] } {
   return !!x && typeof x === 'object' && 'observations' in x;
@@ -69,6 +70,17 @@ export async function runOODALoop(
       duration: Date.now() - startTime,
       success,
     };
+
+    // Update investigating runs with results
+    const investigatingRuns = listRuns(ctx, { status: 'investigating' });
+    for (const run of investigatingRuns) {
+      const result = buildRunResult(loopResult, run);
+      const finalStatus = loopResult.success ? 'completed' : 'failed';
+      const updatedRun = updateRunStatus(ctx, run.id, finalStatus, result);
+      if (updatedRun) {
+        sendCallback(updatedRun).catch(() => {});
+      }
+    }
 
     await executePluginHooks(plugins, 'onLoopComplete', loopResult, ctx);
     ctx.history.push(loopResult);
@@ -167,6 +179,13 @@ async function runObservePhase(
   }
 
   ctx.state.set(lastRunKey, lastRun);
+
+  // Inject pending runs as observations
+  const pendingRuns = listRuns(ctx, { status: 'pending' });
+  for (const run of pendingRuns) {
+    observations.push(runToObservation(run));
+    updateRunStatus(ctx, run.id, 'investigating');
+  }
 
   const hookResults = await executePluginHooks(plugins, 'onObserve', observations, ctx);
 

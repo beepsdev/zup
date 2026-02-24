@@ -81,6 +81,15 @@ export type {
   TokenUsage,
 } from '../llm/types';
 
+// Run types
+export type {
+  Run,
+  RunStatus,
+  RunPriority,
+  RunResult,
+  CreateRunInput,
+} from './run';
+
 // Database types
 export type {
   SQLiteConfig,

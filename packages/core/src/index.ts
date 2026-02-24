@@ -23,6 +23,16 @@ export { createApiServer } from './api/server';
 export { json, error, parseBody, responses } from './api/helpers';
 
 export {
+  createRun,
+  getRun,
+  listRuns,
+  updateRunStatus,
+  runToObservation,
+  buildRunResult,
+  sendCallback,
+} from './runs';
+
+export {
   createLLMProvider,
   createLLMCapability,
   createAnthropicProvider,
@@ -71,4 +81,9 @@ export type {
   TextChunk,
   GenerateOptions,
   TokenUsage,
+  Run,
+  RunStatus,
+  RunPriority,
+  RunResult,
+  CreateRunInput,
 } from './types/index';
