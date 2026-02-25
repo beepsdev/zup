@@ -196,7 +196,7 @@ async function main() {
   }
 
   const llmConfig: LLMConfig = anthropicKey
-    ? { provider: 'anthropic', apiKey: anthropicKey, model: 'claude-3-5-sonnet-20241022' }
+    ? { provider: 'anthropic', apiKey: anthropicKey, model: 'claude-sonnet-4-6' }
     : { provider: 'openai', apiKey: openaiKey!, model: 'gpt-4' };
 
   console.log(`Using ${llmConfig.provider} (${llmConfig.model})\n`);

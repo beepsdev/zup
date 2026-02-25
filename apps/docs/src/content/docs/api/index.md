@@ -348,7 +348,7 @@ Get a summary of the agent's current state.
   "agent": {
     "id": "sre-agent-prod",
     "name": "Production SRE",
-    "model": "claude-sonnet-4-20250514"
+    "model": "claude-sonnet-4-6"
   },
   "capabilities": {
     "observers": ["http-monitor:healthCheck"],

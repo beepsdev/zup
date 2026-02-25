@@ -28,7 +28,7 @@ const agent = await createAgent({
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY,
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-4-6',
   },
   sqlite: { path: './zup.db' },
   plugins: [
@@ -287,12 +287,14 @@ investigationOrienter({
 
 ## LLM Integration
 
+Supports 16+ providers via the Vercel AI SDK: Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and more.
+
 ```typescript
 const agent = await createAgent({
   llm: {
-    provider: 'anthropic', // or 'openai'
+    provider: 'anthropic', // or 'openai', 'google', 'mistral', 'groq', etc.
     apiKey: process.env.ANTHROPIC_API_KEY,
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-4-6',
   },
 });
 
@@ -365,7 +367,7 @@ packages/
     loop.ts       # OODA loop implementation
     plugin.ts     # Plugin system
     types/        # TypeScript types
-    llm/          # LLM providers (Anthropic, OpenAI)
+    llm/          # LLM providers (via Vercel AI SDK)
     db/           # SQLite with namespacing
     embedding/    # Embedding capability
     api/          # HTTP API server

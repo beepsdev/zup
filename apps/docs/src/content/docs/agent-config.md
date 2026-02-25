@@ -22,7 +22,7 @@ const agent = await createAgent({
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY!,
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
   },
 
   // Loop
@@ -88,7 +88,7 @@ const agent = await createAgent({
 
 ### LLM
 
-The `llm` field configures the language model. It is optional -- many plugins work without an LLM.
+The `llm` field configures the language model. It is optional -- many plugins work without an LLM. Zup supports 16+ providers via the Vercel AI SDK.
 
 ```ts
 // Anthropic
@@ -96,7 +96,7 @@ llm: {
   provider: 'anthropic',
   apiKey: string,
   model: string,
-  baseURL?: string,       // Custom API endpoint
+  baseURL?: string,
 }
 
 // OpenAI
@@ -108,14 +108,58 @@ llm: {
   organization?: string,
 }
 
+// Google Gemini
+llm: {
+  provider: 'google',
+  apiKey: string,
+  model: string,
+}
+
+// Simple API-key providers (mistral, groq, xai, cohere, perplexity,
+// togetherai, deepinfra, cerebras, openrouter)
+llm: {
+  provider: 'groq',      // or any of the above
+  apiKey: string,
+  model: string,
+  baseURL?: string,
+}
+
+// Azure OpenAI
+llm: {
+  provider: 'azure',
+  apiKey: string,
+  model: string,
+  resourceName: string,
+  apiVersion?: string,
+}
+
+// Amazon Bedrock
+llm: {
+  provider: 'amazon-bedrock',
+  model: string,
+  region: string,
+  accessKeyId: string,
+  secretAccessKey: string,
+}
+
+// Google Vertex AI
+llm: {
+  provider: 'google-vertex',
+  model: string,
+  project: string,
+  location: string,
+}
+
 // OpenAI-compatible (Ollama, vLLM, LiteLLM, etc.)
 llm: {
   provider: 'openai-compatible',
-  baseURL: string,        // Required
+  baseURL: string,
   apiKey: string,
   model: string,
 }
 ```
+
+See [LLM Providers](/docs/integrations/llm/) for detailed configuration for each provider.
 
 ### Loop
 

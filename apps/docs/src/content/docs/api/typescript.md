@@ -507,30 +507,15 @@ Create an `LLMCapability` object (the same type that appears on `ctx.llm`).
 function createLLMCapability(config: LLMConfig): LLMCapability
 ```
 
-### createAnthropicProvider(options)
+### createAISDKProvider(config)
 
-Create an Anthropic provider directly.
-
-```ts
-function createAnthropicProvider(options: {
-  apiKey: string;
-  model: string;
-  baseURL?: string;
-}): LLMProvider
-```
-
-### createOpenAIProvider(options)
-
-Create an OpenAI provider directly. Also used for OpenAI-compatible APIs.
+Create an LLM provider using the Vercel AI SDK. This is the underlying function used by `createLLMProvider` -- you generally don't need to call it directly.
 
 ```ts
-function createOpenAIProvider(options: {
-  apiKey: string;
-  model: string;
-  baseURL?: string;
-  organization?: string;
-}): LLMProvider
+function createAISDKProvider(config: LLMConfig): LLMProvider
 ```
+
+All 16 provider variants in `LLMConfig` are supported: `anthropic`, `openai`, `google`, `mistral`, `groq`, `xai`, `cohere`, `perplexity`, `togetherai`, `deepinfra`, `cerebras`, `openrouter`, `azure`, `amazon-bedrock`, `google-vertex`, and `openai-compatible`.
 
 See [LLM Providers](/docs/integrations/llm/) for usage patterns and the full type reference.
 
@@ -793,7 +778,7 @@ sqlite.close();
 const llm = createLLMCapability({
   provider: 'anthropic',
   apiKey: process.env.ANTHROPIC_API_KEY!,
-  model: 'claude-sonnet-4-20250514',
+  model: 'claude-sonnet-4-6',
 });
 
 const result = await llm.generateText('What is 2 + 2?');

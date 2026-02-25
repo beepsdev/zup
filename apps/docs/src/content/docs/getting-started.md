@@ -61,7 +61,7 @@ const agent = await createAgent({
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY!,
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
   },
   plugins: [
     httpMonitor({
@@ -73,7 +73,7 @@ const agent = await createAgent({
 });
 ```
 
-OpenAI and OpenAI-compatible providers are also supported:
+Zup supports 16+ providers. For example, OpenAI:
 
 ```ts
 llm: {
@@ -82,6 +82,8 @@ llm: {
   model: 'gpt-4o',
 }
 ```
+
+See [LLM Providers](/docs/integrations/llm/) for Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and more.
 
 ## Add SQLite for persistence
 
@@ -97,7 +99,7 @@ const agent = await createAgent({
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY!,
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
   },
   sqlite: { path: './zup.db' },
   plugins: [

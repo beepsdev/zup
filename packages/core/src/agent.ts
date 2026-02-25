@@ -24,7 +24,7 @@ export async function createAgent(options: AgentOptions = {}) {
     agent: {
       id: options.id || randomUUID(),
       name: options.name || 'Zup',
-      model: options.model || 'claude-3-5-sonnet',
+      model: options.model || 'claude-sonnet-4-6',
       systemPrompt: options.systemPrompt || 'You are Zup, an SRE agent that helps maintain and troubleshoot systems.',
     },
 

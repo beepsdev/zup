@@ -228,7 +228,7 @@ bun examples/llm-demo.ts
 ```
 === Zup LLM Integration Demo ===
 
-Using anthropic (claude-3-5-sonnet-20241022)
+Using anthropic (claude-sonnet-4-6)
 
 Running OODA loop with LLM-powered analysis...
 

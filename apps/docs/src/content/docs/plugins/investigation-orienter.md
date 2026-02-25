@@ -16,7 +16,7 @@ import { queryLogs, queryMetrics, checkHealth } from 'zupdev/plugins/investigati
 
 const agent = await createAgent({
   name: 'my-agent',
-  llm: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
+  llm: { provider: 'anthropic', model: 'claude-sonnet-4-6' },
   plugins: [
     investigationOrienter({
       tools: [queryLogs, queryMetrics, checkHealth],
@@ -200,7 +200,7 @@ const agent = await createAgent({
   loopInterval: 30000,
   llm: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     apiKey: process.env.ANTHROPIC_API_KEY,
   },
   plugins: [

@@ -1,9 +1,9 @@
 ---
 title: LLM Providers
-description: Configure and use LLM providers -- Anthropic, OpenAI, and OpenAI-compatible APIs -- for text generation, structured output, streaming, and tool calling.
+description: Configure and use LLM providers for text generation, structured output, streaming, and tool calling. Supports 16+ providers via the Vercel AI SDK.
 ---
 
-Zup provides a provider-agnostic LLM abstraction layer. You can use Anthropic's Claude, OpenAI's GPT models, or any OpenAI-compatible API (Ollama, vLLM, LiteLLM, Together AI, etc.) with the same interface.
+Zup provides a provider-agnostic LLM abstraction layer powered by the [Vercel AI SDK](https://ai-sdk.dev). You can use Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, Cohere, Perplexity, Together AI, DeepInfra, Cerebras, OpenRouter, Azure OpenAI, Amazon Bedrock, Google Vertex AI, or any OpenAI-compatible endpoint with the same interface.
 
 LLM configuration is optional. Many plugins (like `http-monitor`) work without an LLM. Plugins that require LLM access (like `investigation-orienter`) will check for `ctx.llm` at runtime.
 
@@ -21,7 +21,7 @@ const agent = await createAgent({
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY!,
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
   },
   plugins: [...],
 });
@@ -31,7 +31,7 @@ const agent = await createAgent({
 |---|---|---|---|
 | `provider` | `'anthropic'` | Yes | Selects the Anthropic provider. |
 | `apiKey` | `string` | Yes | Anthropic API key. |
-| `model` | `string` | Yes | Model name (e.g., `'claude-sonnet-4-20250514'`, `'claude-haiku-4-20250514'`). |
+| `model` | `string` | Yes | Model name (e.g., `'claude-sonnet-4-6'`, `'claude-haiku-4-20250514'`). |
 | `baseURL` | `string` | No | Custom API endpoint. Useful for proxies or API gateways. |
 
 ### OpenAI
@@ -56,44 +56,115 @@ const agent = await createAgent({
 | `baseURL` | `string` | No | Custom API endpoint. |
 | `organization` | `string` | No | OpenAI organization ID. |
 
-### OpenAI-compatible
-
-Use this for any provider that exposes an OpenAI-compatible API: Ollama, vLLM, LiteLLM, Together AI, Groq, etc.
+### Google Gemini
 
 ```ts
-// Ollama (local)
-const agent = await createAgent({
-  name: 'my-agent',
-  llm: {
-    provider: 'openai-compatible',
-    baseURL: 'http://localhost:11434/v1',
-    apiKey: 'ollama',  // Ollama doesn't need a real key
-    model: 'llama3.1',
-  },
-  plugins: [...],
-});
-
-// Together AI
-const agent = await createAgent({
-  name: 'my-agent',
-  llm: {
-    provider: 'openai-compatible',
-    baseURL: 'https://api.together.xyz/v1',
-    apiKey: process.env.TOGETHER_API_KEY!,
-    model: 'meta-llama/Llama-3-70b-chat-hf',
-  },
-  plugins: [...],
-});
+llm: {
+  provider: 'google',
+  apiKey: process.env.GOOGLE_API_KEY!,
+  model: 'gemini-2.0-flash',
+}
 ```
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `provider` | `'openai-compatible'` | Yes | Selects the OpenAI-compatible provider. |
-| `baseURL` | `string` | Yes | API endpoint URL. Must include `/v1` if the provider expects it. |
-| `apiKey` | `string` | Yes | API key for the provider. |
-| `model` | `string` | Yes | Model name as expected by the provider. |
+### Mistral
 
-Under the hood, `openai-compatible` uses the same OpenAI SDK client as the `openai` provider, but with a custom `baseURL` and no organization field.
+```ts
+llm: {
+  provider: 'mistral',
+  apiKey: process.env.MISTRAL_API_KEY!,
+  model: 'mistral-large-latest',
+}
+```
+
+### Groq
+
+```ts
+llm: {
+  provider: 'groq',
+  apiKey: process.env.GROQ_API_KEY!,
+  model: 'llama-3.3-70b-versatile',
+}
+```
+
+### xAI (Grok)
+
+```ts
+llm: {
+  provider: 'xai',
+  apiKey: process.env.XAI_API_KEY!,
+  model: 'grok-2',
+}
+```
+
+### OpenRouter
+
+```ts
+llm: {
+  provider: 'openrouter',
+  apiKey: process.env.OPENROUTER_API_KEY!,
+  model: 'anthropic/claude-sonnet-4',
+}
+```
+
+### Azure OpenAI
+
+```ts
+llm: {
+  provider: 'azure',
+  apiKey: process.env.AZURE_API_KEY!,
+  model: 'gpt-4o',
+  resourceName: 'my-resource',
+  apiVersion: '2024-12-01-preview',  // optional
+}
+```
+
+### Amazon Bedrock
+
+```ts
+llm: {
+  provider: 'amazon-bedrock',
+  model: 'anthropic.claude-sonnet-4-6-v1:0',
+  region: 'us-east-1',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+}
+```
+
+### Google Vertex AI
+
+```ts
+llm: {
+  provider: 'google-vertex',
+  model: 'gemini-2.0-flash',
+  project: 'my-gcp-project',
+  location: 'us-central1',
+}
+```
+
+### Other providers
+
+Cohere, Perplexity, Together AI, DeepInfra, and Cerebras all follow the same simple pattern:
+
+```ts
+llm: {
+  provider: 'cohere',      // or 'perplexity', 'togetherai', 'deepinfra', 'cerebras'
+  apiKey: process.env.COHERE_API_KEY!,
+  model: 'command-a-08-2025',
+}
+```
+
+### OpenAI-compatible
+
+For any provider that exposes an OpenAI-compatible API (Ollama, vLLM, LiteLLM, etc.):
+
+```ts
+llm: {
+  provider: 'openai-compatible',
+  baseURL: 'http://localhost:11434/v1',
+  apiKey: 'ollama',
+  model: 'llama3.1',
+}
+```
 
 ## LLM capability
 
@@ -145,7 +216,7 @@ type TextResult = {
 
 ### Generate structured output
 
-Use a Zod schema to get validated, typed output from the LLM. The framework instructs the LLM to respond with JSON, parses the response, and validates it against your schema.
+Use a Zod schema to get validated, typed output from the LLM. The AI SDK uses native structured output where the provider supports it (OpenAI, Google) and tool-based extraction as a fallback, with automatic Zod schema validation.
 
 ```ts
 import { z } from 'zod';
@@ -173,9 +244,7 @@ console.log(summary.status);           // 'degraded'
 console.log(summary.affectedServices); // ['api-gateway', 'auth-service']
 ```
 
-If the LLM returns invalid JSON or the response fails Zod validation, `generateStructured` throws an error.
-
-The method handles JSON wrapped in markdown code blocks -- if the LLM responds with ` ```json ... ``` `, the framework strips the code fences before parsing.
+If the LLM returns invalid output or the response fails Zod validation, `generateStructured` throws an error.
 
 ### Stream text
 
@@ -359,7 +428,7 @@ const agent = await createAgent({
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY!,
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
   },
   plugins: [
     investigationOrienter({
@@ -394,7 +463,7 @@ import { createLLMProvider, createLLMCapability } from 'zupdev';
 const provider = createLLMProvider({
   provider: 'anthropic',
   apiKey: process.env.ANTHROPIC_API_KEY!,
-  model: 'claude-sonnet-4-20250514',
+  model: 'claude-sonnet-4-6',
 });
 
 const result = await provider.generateText('Hello, world!');

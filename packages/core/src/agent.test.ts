@@ -13,7 +13,7 @@ describe('Zup Agent', () => {
     const ctx = agent.getContext();
 
     expect(ctx.agent.name).toBe('Zup');
-    expect(ctx.agent.model).toBe('claude-3-5-sonnet');
+    expect(ctx.agent.model).toBe('claude-sonnet-4-6');
     expect(ctx.loop.iteration).toBe(0);
     expect(ctx.loop.phase).toBe('idle');
   });
