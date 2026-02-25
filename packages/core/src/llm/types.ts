@@ -2,7 +2,7 @@
  * LLM Abstraction Types
  *
  * Minimal, provider-agnostic interfaces for LLM integration.
- * Supports Anthropic, OpenAI, and any OpenAI-compatible API.
+ * Supports 20+ providers via the Vercel AI SDK.
  */
 
 import type { z } from 'zod';
@@ -133,21 +133,57 @@ export interface LLMProvider {
 }
 
 /**
+ * Base config shared by all simple API-key providers
+ */
+type BaseProviderConfig = {
+  apiKey: string;
+  model: string;
+  baseURL?: string;
+};
+
+/**
  * Provider-specific configuration
+ *
+ * Simple API-key providers: anthropic, openai, google, mistral, groq, xai,
+ * cohere, perplexity, togetherai, deepinfra, cerebras, openrouter
+ *
+ * Providers with extra options: azure, amazon-bedrock, google-vertex
+ *
+ * Generic: openai-compatible (any endpoint with baseURL)
  */
 export type LLMConfig =
+  | (BaseProviderConfig & { provider: 'anthropic' })
+  | (BaseProviderConfig & { provider: 'openai'; organization?: string })
+  | (BaseProviderConfig & { provider: 'google' })
+  | (BaseProviderConfig & { provider: 'mistral' })
+  | (BaseProviderConfig & { provider: 'groq' })
+  | (BaseProviderConfig & { provider: 'xai' })
+  | (BaseProviderConfig & { provider: 'cohere' })
+  | (BaseProviderConfig & { provider: 'perplexity' })
+  | (BaseProviderConfig & { provider: 'togetherai' })
+  | (BaseProviderConfig & { provider: 'deepinfra' })
+  | (BaseProviderConfig & { provider: 'cerebras' })
+  | (BaseProviderConfig & { provider: 'openrouter' })
   | {
-      provider: 'anthropic';
+      provider: 'azure';
       apiKey: string;
       model: string;
-      baseURL?: string;
+      resourceName: string;
+      apiVersion?: string;
     }
   | {
-      provider: 'openai';
-      apiKey: string;
+      provider: 'amazon-bedrock';
       model: string;
-      baseURL?: string;
-      organization?: string;
+      region: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+      sessionToken?: string;
+    }
+  | {
+      provider: 'google-vertex';
+      model: string;
+      project: string;
+      location: string;
     }
   | {
       provider: 'openai-compatible';

@@ -9,10 +9,26 @@
     "./types": "./src/types/index.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.0",
+    "@ai-sdk/amazon-bedrock": "^4.0.64",
+    "@ai-sdk/anthropic": "^3.0.47",
+    "@ai-sdk/azure": "^3.0.34",
+    "@ai-sdk/cerebras": "^2.0.34",
+    "@ai-sdk/cohere": "^3.0.21",
+    "@ai-sdk/deepinfra": "^2.0.34",
+    "@ai-sdk/google": "^3.0.31",
+    "@ai-sdk/google-vertex": "^4.0.63",
+    "@ai-sdk/groq": "^3.0.24",
+    "@ai-sdk/mistral": "^3.0.20",
+    "@ai-sdk/openai": "^3.0.33",
+    "@ai-sdk/openai-compatible": "^2.0.30",
+    "@ai-sdk/perplexity": "^3.0.19",
+    "@ai-sdk/togetherai": "^2.0.33",
+    "@ai-sdk/xai": "^3.0.59",
+    "@openrouter/ai-sdk-provider": "^2.2.3",
+    "ai": "^6.0.99",
     "defu": "^6.1.4",
     "google-auth-library": "^9.11.0",
-    "openai": "^6.9.1",
+    "openai": "^6.25.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

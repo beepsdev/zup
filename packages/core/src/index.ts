@@ -35,8 +35,7 @@ export {
 export {
   createLLMProvider,
   createLLMCapability,
-  createAnthropicProvider,
-  createOpenAIProvider,
+  createAISDKProvider,
 } from './llm';
 
 export type {
