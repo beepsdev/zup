@@ -19,7 +19,7 @@ export default defineConfig({
         {
           label: 'Getting Started',
           items: [
-            { label: 'Overview', link: '/overview/' },
+            { label: 'Overview', link: '/' },
             { label: 'Quickstart', link: '/getting-started/' },
             { label: 'Running the Examples', link: '/examples/' },
           ],

@@ -1,0 +1,42 @@
+# Zup
+
+> Zup is an open source reliability agent framework that runs the OODA loop (Observe, Orient, Decide, Act) on your production systems. It watches infrastructure, builds situational awareness, decides on the safest response, and acts automatically or with human approval.
+
+Zup is built with TypeScript and Bun. It supports 16+ LLM providers via the Vercel AI SDK and uses a plugin system for extensibility.
+
+## Getting Started
+
+- [Overview](/docs/): Project overview and architecture
+- [Quickstart](/docs/getting-started/): Install Zup and run your first OODA loop
+- [Running the Examples](/docs/examples/): How to run the included example scripts
+
+## Core
+
+- [Core Concepts](/docs/core-concepts/): Observers, orienters, strategies, actions, and the plugin system
+- [Agent Configuration](/docs/agent-config/): Full reference for createAgent() options
+- [The OODA Loop](/docs/ooda-loop/): How the observe-orient-decide-act loop works
+- [State & Persistence](/docs/state/): State store, file persistence, and database persistence
+- [Approval Queue](/docs/approvals/): Human-in-the-loop approval system for risky actions
+
+## Plugins
+
+- [Plugin Overview](/docs/plugins/): Catalog of built-in plugins
+- [Writing a Plugin](/docs/plugins/authoring/): Build your own observer, orienter, or action
+- [http-monitor](/docs/plugins/http-monitor/): Monitor HTTP endpoints with auto-restart
+- [historian](/docs/plugins/historian/): RAG-powered incident history and pattern matching
+- [investigation-orienter](/docs/plugins/investigation-orienter/): Deep LLM investigation with tool calling
+- [kubernetes](/docs/plugins/kubernetes/): Monitor Kubernetes cluster health
+- [cloud-run](/docs/plugins/cloud-run/): Google Cloud Run service monitoring
+- [fly-machines](/docs/plugins/fly-machines/): Fly.io machine monitoring
+- [vercel-deploys](/docs/plugins/vercel-deploys/): Vercel deployment monitoring
+- [github-activity](/docs/plugins/github-activity/): GitHub commit and PR tracking
+
+## Integrations
+
+- [LLM Providers](/docs/integrations/llm/): Configure 16+ LLM providers for text generation, structured output, streaming, and tool calling
+- [SQLite & Embeddings](/docs/integrations/sqlite/): SQLite database and vector search with sqlite-vec
+
+## API Reference
+
+- [REST API](/docs/api/): Complete REST API endpoint reference
+- [TypeScript API](/docs/api/typescript/): All exported functions, types, and interfaces
