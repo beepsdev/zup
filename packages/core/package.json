@@ -1,7 +1,27 @@
 {
   "name": "zupdev",
   "version": "0.1.0",
+  "description": "Open source reliability agent that runs the OODA loop on production systems",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beepsdev/zup.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://zup.dev/docs",
+  "bugs": {
+    "url": "https://github.com/beepsdev/zup/issues"
+  },
+  "keywords": [
+    "sre",
+    "reliability",
+    "agent",
+    "ooda-loop",
+    "monitoring",
+    "llm",
+    "incident-response"
+  ],
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

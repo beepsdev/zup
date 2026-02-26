@@ -6,6 +6,10 @@
   </picture>
 </p>
 
+<p align="center">
+  <a href="https://zup.dev">Website</a> &middot; <a href="https://zup.dev/docs">Docs</a> &middot; <a href="https://github.com/beepsdev/zup/issues">Issues</a>
+</p>
+
 Zup is an open source reliability agent that continuously runs the OODA loop (Observe, Orient, Decide, Act) on your production systems.
 
 Zup observes signals across your stack, builds situational awareness from current state and historical context, decides on the safest response, and acts (automatically or with human approval) to keep systems up.
@@ -390,3 +394,15 @@ bun typecheck         # Type check
 bun run demo.ts       # Run demo
 bun run llm-demo.ts   # Run LLM demo (requires API key)
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## Security
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)
