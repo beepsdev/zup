@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://zup.dev">Website</a> &middot; <a href="https://zup.dev/docs">Docs</a> &middot; <a href="https://github.com/beepsdev/zup/issues">Issues</a>
+  <a href="https://zup.dev">zup.dev</a> &middot; <a href="https://zup.dev/docs">docs</a> &middot; <a href="https://github.com/beepsdev/zup/issues">issues</a>
 </p>
 
 Zup is an open source reliability agent that continuously runs the OODA loop (Observe, Orient, Decide, Act) on your production systems.
