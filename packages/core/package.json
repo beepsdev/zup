@@ -22,6 +22,12 @@
     "llm",
     "incident-response"
   ],
+  "files": [
+    "src",
+    "!**/*.test.ts",
+    "LICENSE",
+    "README.md"
+  ],
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
