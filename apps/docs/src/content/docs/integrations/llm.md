@@ -3,7 +3,7 @@ title: LLM Providers
 description: Configure and use LLM providers for text generation, structured output, streaming, and tool calling. Supports 16+ providers via the Vercel AI SDK.
 ---
 
-Zup provides a provider-agnostic LLM abstraction layer powered by the [Vercel AI SDK](https://ai-sdk.dev). You can use Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, Cohere, Perplexity, Together AI, DeepInfra, Cerebras, OpenRouter, Azure OpenAI, Amazon Bedrock, Google Vertex AI, or any OpenAI-compatible endpoint with the same interface.
+Zup wraps the [Vercel AI SDK](https://ai-sdk.dev) so you can use any supported LLM provider with the same interface. Supported providers include Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, Cohere, Perplexity, Together AI, DeepInfra, Cerebras, OpenRouter, Azure OpenAI, Amazon Bedrock, Google Vertex AI, and any OpenAI-compatible endpoint.
 
 LLM configuration is optional. Many plugins (like `http-monitor`) work without an LLM. Plugins that require LLM access (like `investigation-orienter`) will check for `ctx.llm` at runtime.
 

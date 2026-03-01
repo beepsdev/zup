@@ -83,7 +83,7 @@ llm: {
 }
 ```
 
-See [LLM Providers](/docs/integrations/llm/) for Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and more.
+See [LLM Providers](/docs/integrations/llm/) for Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and others.
 
 ## Add SQLite for persistence
 

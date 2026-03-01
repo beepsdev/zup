@@ -2,7 +2,7 @@
 
 > Zup is an open source reliability agent framework that runs the OODA loop (Observe, Orient, Decide, Act) on your production systems.
 
-Zup is an open-source reliability agent framework that runs the OODA loop (Observe, Orient, Decide, Act) on your production systems. It watches your infrastructure, builds situational awareness, decides on the safest response, and acts -- automatically or with human approval.
+Zup is an open-source reliability agent framework that runs the OODA loop (Observe, Orient, Decide, Act) on your production systems. It watches your infrastructure, correlates signals with past incidents, decides on the safest response, and acts -- automatically or with human approval.
 
 ## Key capabilities
 
@@ -161,7 +161,7 @@ llm: {
 }
 ```
 
-See [LLM Providers](/docs/integrations/llm/) for Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and more.
+See [LLM Providers](/docs/integrations/llm/) for Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and others.
 
 ## Add SQLite for persistence
 
@@ -4478,7 +4478,7 @@ Three GitHub repos are monitored with truncated patch content for file-level cha
 
 ---
 
-Zup provides a provider-agnostic LLM abstraction layer powered by the [Vercel AI SDK](https://ai-sdk.dev). You can use Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, Cohere, Perplexity, Together AI, DeepInfra, Cerebras, OpenRouter, Azure OpenAI, Amazon Bedrock, Google Vertex AI, or any OpenAI-compatible endpoint with the same interface.
+Zup wraps the [Vercel AI SDK](https://ai-sdk.dev) so you can use any supported LLM provider with the same interface. Supported providers include Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, Cohere, Perplexity, Together AI, DeepInfra, Cerebras, OpenRouter, Azure OpenAI, Amazon Bedrock, Google Vertex AI, and any OpenAI-compatible endpoint.
 
 LLM configuration is optional. Many plugins (like `http-monitor`) work without an LLM. Plugins that require LLM access (like `investigation-orienter`) will check for `ctx.llm` at runtime.
 

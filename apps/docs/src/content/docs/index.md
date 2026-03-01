@@ -3,7 +3,7 @@ title: ZUP
 description: Open source AI SRE agent framework built around the OODA loop.
 ---
 
-Zup is an open-source reliability agent framework that runs the OODA loop (Observe, Orient, Decide, Act) on your production systems. It watches your infrastructure, builds situational awareness, decides on the safest response, and acts -- automatically or with human approval.
+Zup is an open-source reliability agent framework that runs the OODA loop (Observe, Orient, Decide, Act) on your production systems. It watches your infrastructure, correlates signals with past incidents, decides on the safest response, and acts -- automatically or with human approval.
 
 ## Key capabilities
 

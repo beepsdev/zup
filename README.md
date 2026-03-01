@@ -12,7 +12,7 @@
 
 Zup is an open source reliability agent that continuously runs the OODA loop (Observe, Orient, Decide, Act) on your production systems.
 
-Zup observes signals across your stack, builds situational awareness from current state and historical context, decides on the safest response, and acts (automatically or with human approval) to keep systems up.
+Zup observes signals across your stack, correlates them with current state and past incidents, decides on the safest response, and acts (automatically or with human approval) to keep systems up.
 
 ## Install
 
@@ -142,7 +142,7 @@ Available plugins in this repo:
 
 ### http-monitor
 
-Health check monitoring with automatic restart capabilities.
+Health check monitoring with automatic restarts.
 
 ```typescript
 import { httpMonitor } from 'zupdev/plugins/http-monitor';
@@ -291,7 +291,7 @@ investigationOrienter({
 
 ## LLM Integration
 
-Supports 16+ providers via the Vercel AI SDK: Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and more.
+Supports 16+ providers via the Vercel AI SDK, including Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, and Vertex AI.
 
 ```typescript
 const agent = await createAgent({
