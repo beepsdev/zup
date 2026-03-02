@@ -1,6 +1,6 @@
 {
   "name": "zupdev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Open source reliability agent that runs the OODA loop on production systems",
   "type": "module",
   "license": "MIT",
