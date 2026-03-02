@@ -17,7 +17,7 @@ import {
   type AgentContext,
   type Observation,
   type SituationAssessment,
-} from '../../core/src/index';
+} from '../../index';
 import { z } from 'zod';
 import { GoogleAuth } from 'google-auth-library';
 import type {

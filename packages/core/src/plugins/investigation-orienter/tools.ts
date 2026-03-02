@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { createInvestigationTool } from '../../core/src/investigation';
+import { createInvestigationTool } from '../../investigation';
 
 /**
  * Query logs for a service

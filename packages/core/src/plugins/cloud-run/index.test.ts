@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { createAgent } from '../../core/src/index';
+import { createAgent } from '../../index';
 import { cloudRun } from './index';
 
 describe('Cloud Run Plugin', () => {

@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, mock } from 'bun:test';
-import { createAgent } from '../../core/src/index';
+import { createAgent } from '../../index';
 import { httpMonitor } from './index';
 
 describe('HTTP Monitor Plugin', () => {

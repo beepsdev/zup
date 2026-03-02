@@ -13,12 +13,12 @@ import {
   type AgentContext,
   type Observation,
   type SituationAssessment,
-} from '../../core/src/index';
+} from '../../index';
 import {
   runInvestigation,
   type InvestigationTool,
   type InvestigationResult,
-} from '../../core/src/investigation';
+} from '../../investigation';
 
 export type InvestigationOrienterConfig = {
   tools: InvestigationTool[];

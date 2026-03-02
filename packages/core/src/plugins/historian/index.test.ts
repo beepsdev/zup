@@ -1,5 +1,5 @@
 import { test, expect, describe, beforeEach, mock } from 'bun:test';
-import { createAgent, type AgentContext, type LoopResult } from '../../core/src/index';
+import { createAgent, type AgentContext, type LoopResult } from '../../index';
 import { historianPlugin, type StoredIncident } from './index';
 
 describe('Historian Plugin', () => {

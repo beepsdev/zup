@@ -1,5 +1,5 @@
 import { createAgent } from '../packages/core/src/index';
-import { examplePlugin } from '../packages/plugins/example';
+import { examplePlugin } from 'zupdev/plugins/example';
 import winston from 'winston';
 
 async function main() {

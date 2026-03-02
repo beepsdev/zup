@@ -1,6 +1,6 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { kubernetes } from './index';
-import type { AgentContext, Observation } from '../../core/src/index';
+import type { AgentContext, Observation } from '../../index';
 
 const mockLogger = {
   info: mock(() => {}),

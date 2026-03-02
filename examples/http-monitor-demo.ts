@@ -1,5 +1,5 @@
 import { createAgent } from '../packages/core/src/index';
-import { httpMonitor } from '../packages/plugins/http-monitor/index';
+import { httpMonitor } from 'zupdev/plugins/http-monitor';
 
 let serviceHealthy = true;
 let restartCount = 0;

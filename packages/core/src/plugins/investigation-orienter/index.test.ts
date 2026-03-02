@@ -3,9 +3,9 @@
  */
 
 import { describe, test, expect, mock } from 'bun:test';
-import { createAgent, type AgentContext } from '../../core/src/index';
+import { createAgent, type AgentContext } from '../../index';
 import { investigationOrienter } from './index';
-import { createInvestigationTool } from '../../core/src/investigation';
+import { createInvestigationTool } from '../../investigation';
 import { z } from 'zod';
 
 describe('Investigation Orienter Plugin', () => {
@@ -229,7 +229,7 @@ describe('Investigation Orienter Plugin', () => {
 });
 
 describe('Zod to JSON Schema Converter', () => {
-  const { zodToJsonSchema } = require('../../core/src/utils/zod-to-json-schema');
+  const { zodToJsonSchema } = require('../../utils/zod-to-json-schema');
 
   test('should convert string schema', () => {
     const schema = z.string();

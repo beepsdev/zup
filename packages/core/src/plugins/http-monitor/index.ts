@@ -25,7 +25,7 @@ import {
   type AgentContext,
   type Observation,
   type SituationAssessment,
-} from '../../core/src/index';
+} from '../../index';
 import { z } from 'zod';
 import type {
   HttpMonitorPluginOptions,

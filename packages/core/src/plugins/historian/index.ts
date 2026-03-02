@@ -14,8 +14,8 @@ import {
   type SituationAssessment,
   type LoopResult,
   type SQLiteCapability,
-} from '../../core/src/index';
-import { createEmbeddingCapability, type EmbeddingCapability, type EmbeddingConfig } from '../../core/src/embedding';
+} from '../../index';
+import { createEmbeddingCapability, type EmbeddingCapability, type EmbeddingConfig } from '../../embedding';
 
 export type HistorianPluginOptions = {
   minConfidence?: number;

@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { createAgent } from '../../core/src/index';
+import { createAgent } from '../../index';
 import { flyMachines } from './index';
 import type { FlyApiMachine } from './types';
 

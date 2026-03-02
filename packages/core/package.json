@@ -32,7 +32,16 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./types": "./src/types/index.ts"
+    "./types": "./src/types/index.ts",
+    "./plugins/cloud-run": "./src/plugins/cloud-run/index.ts",
+    "./plugins/fly-machines": "./src/plugins/fly-machines/index.ts",
+    "./plugins/github-activity": "./src/plugins/github-activity/index.ts",
+    "./plugins/historian": "./src/plugins/historian/index.ts",
+    "./plugins/http-monitor": "./src/plugins/http-monitor/index.ts",
+    "./plugins/investigation-orienter": "./src/plugins/investigation-orienter/index.ts",
+    "./plugins/kubernetes": "./src/plugins/kubernetes/index.ts",
+    "./plugins/vercel-deploys": "./src/plugins/vercel-deploys/index.ts",
+    "./plugins/example": "./src/plugins/example.ts"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^4.0.64",

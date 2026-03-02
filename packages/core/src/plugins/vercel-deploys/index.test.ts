@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
-import { createAgent } from '../../core/src/index';
+import { createAgent } from '../../index';
 import { vercelDeploys } from './index';
 import type { VercelApiDeploymentsResponse } from './types';
 

@@ -3,7 +3,7 @@
  */
 
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { createAgent } from '../../core/src/index';
+import { createAgent } from '../../index';
 import { githubActivity } from './index';
 import type { GitHubApiCommit, GitHubApiPullRequest } from './types';
 

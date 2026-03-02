@@ -25,7 +25,7 @@ import {
   type AgentContext,
   type Observation,
   type SituationAssessment,
-} from '../../core/src/index';
+} from '../../index';
 import type {
   VercelDeploysPluginOptions,
   VercelProjectConfig,

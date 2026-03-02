@@ -18,7 +18,7 @@ import {
   type AgentContext,
   type Observation,
   type SituationAssessment,
-} from 'zupdev';
+} from '../../index';
 import type {
   GitHubActivityPluginOptions,
   GitHubRepoConfig,
