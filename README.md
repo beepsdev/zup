@@ -138,7 +138,7 @@ Available plugins in this repo:
 - `kubernetes` - Monitor cluster health and (optionally) restart/scale/delete pods or fetch logs.
 - `historian` - Store successful incident resolutions in SQLite and retrieve similar incidents.
 - `investigation-orienter` - Run a tool-calling investigation loop during Orient on severe signals.
-- `example` (reference) - `packages/plugins/example.ts` demonstrates full plugin wiring.
+- `example` (reference) - `packages/core/src/plugins/example.ts` demonstrates full plugin wiring.
 
 ### http-monitor
 

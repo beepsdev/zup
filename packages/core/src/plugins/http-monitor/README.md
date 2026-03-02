@@ -317,7 +317,7 @@ httpMonitor({
 Run the plugin tests:
 
 ```bash
-bun test packages/plugins/http-monitor/index.test.ts
+bun test packages/core/src/plugins/http-monitor/index.test.ts
 ```
 
 Run the interactive demo:

@@ -39,6 +39,7 @@
     "./plugins/historian": "./src/plugins/historian/index.ts",
     "./plugins/http-monitor": "./src/plugins/http-monitor/index.ts",
     "./plugins/investigation-orienter": "./src/plugins/investigation-orienter/index.ts",
+    "./plugins/investigation-orienter/tools": "./src/plugins/investigation-orienter/tools.ts",
     "./plugins/kubernetes": "./src/plugins/kubernetes/index.ts",
     "./plugins/vercel-deploys": "./src/plugins/vercel-deploys/index.ts",
     "./plugins/example": "./src/plugins/example.ts"

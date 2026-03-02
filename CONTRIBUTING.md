@@ -34,7 +34,7 @@ bun run check        # Both at once
 
 ## Writing plugins
 
-If you're adding a new built-in plugin, follow the existing pattern in `packages/plugins/`. Each plugin should:
+If you're adding a new built-in plugin, follow the existing pattern in `packages/core/src/plugins/`. Each plugin should:
 
 - Export a factory function that returns a `ZupPlugin`
 - Include tests in an `index.test.ts` file
