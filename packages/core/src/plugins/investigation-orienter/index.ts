@@ -10,6 +10,7 @@
 import {
   definePlugin,
   createOrienter,
+  meetsThreshold,
   type AgentContext,
   type Observation,
   type SituationAssessment,
@@ -32,18 +33,6 @@ export type InvestigationOrienterConfig = {
   /** Enable playbook injection into investigation system prompt. Default: true */
   enablePlaybooks?: boolean;
 };
-
-const SEVERITY_ORDER = ['info', 'warning', 'error', 'critical'] as const;
-
-function meetsThreshold(
-  severity: string | undefined,
-  threshold: 'info' | 'warning' | 'error' | 'critical'
-): boolean {
-  if (!severity) return false;
-  const severityIndex = SEVERITY_ORDER.indexOf(severity as typeof SEVERITY_ORDER[number]);
-  const thresholdIndex = SEVERITY_ORDER.indexOf(threshold);
-  return severityIndex >= thresholdIndex;
-}
 
 function buildInvestigationPrompt(observations: Observation[]): string {
   const obsText = observations
@@ -140,21 +129,16 @@ export const investigationOrienter = (config: InvestigationOrienterConfig) => {
           const prompt = buildInvestigationPrompt(observations);
 
           // Match and inject playbooks into system prompt
-          let effectiveSystemPrompt = systemPrompt;
-          if (enablePlaybooks) {
-            const allPlaybooks = (ctx.playbooks as Playbook[] | undefined) || [];
-            if (allPlaybooks.length > 0) {
-              const matched = matchPlaybooks(allPlaybooks, observations, 'orient');
-              if (matched.length > 0) {
-                ctx.logger.info('[investigation-orienter] Matched playbook(s)', {
-                  count: matched.length,
-                  names: matched.map(p => p.name),
-                });
-                effectiveSystemPrompt = buildAugmentedSystemPrompt(
-                  systemPrompt || DEFAULT_INVESTIGATION_SYSTEM_PROMPT,
-                  matched,
-                );
-              }
+          const basePrompt = systemPrompt || DEFAULT_INVESTIGATION_SYSTEM_PROMPT;
+          let effectiveSystemPrompt: string | undefined = systemPrompt;
+          if (enablePlaybooks && ctx.playbooks.length > 0) {
+            const matched = matchPlaybooks(ctx.playbooks, observations, 'orient');
+            if (matched.length > 0) {
+              ctx.logger.info('[investigation-orienter] Matched playbook(s)', {
+                count: matched.length,
+                names: matched.map(p => p.name),
+              });
+              effectiveSystemPrompt = buildAugmentedSystemPrompt(basePrompt, matched);
             }
           }
 

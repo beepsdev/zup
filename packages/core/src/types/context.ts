@@ -145,6 +145,9 @@ export type AgentContext = {
   state: StateStore;
   history: LoopResult[];
 
+  // Playbooks loaded from all sources
+  playbooks: Playbook[];
+
   // Configuration
   options: AgentOptions;
 

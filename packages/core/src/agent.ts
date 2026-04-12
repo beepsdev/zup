@@ -59,13 +59,14 @@ export async function createAgent(options: AgentOptions = {}) {
       sqlite: sqliteCapability,
     }),
     history: [],
+    playbooks: [],
 
     options,
   };
 
   const plugins: ZupPlugin[] = (options.plugins as ZupPlugin[]) || [];
 
-  const { context: initializedContext, options: mergedOptions } = await initializePlugins(
+  const { context: initializedContext, options: mergedOptions, pluginPlaybooks } = await initializePlugins(
     context,
     plugins
   );
@@ -73,10 +74,9 @@ export async function createAgent(options: AgentOptions = {}) {
   context = initializedContext;
   context.options = mergedOptions;
 
-  // Load and merge playbooks from all sources
+  // Collect playbooks from all sources
   const allPlaybooks: Playbook[] = [];
 
-  // 1. Inline playbooks from options
   if (mergedOptions.playbooks) {
     allPlaybooks.push(
       ...(mergedOptions.playbooks as Playbook[]).map(p => ({
@@ -86,7 +86,6 @@ export async function createAgent(options: AgentOptions = {}) {
     );
   }
 
-  // 2. Filesystem playbooks
   if (mergedOptions.playbooksDir) {
     const fsPlaybooks = await loadPlaybooksFromDir(
       mergedOptions.playbooksDir as string,
@@ -95,8 +94,6 @@ export async function createAgent(options: AgentOptions = {}) {
     allPlaybooks.push(...fsPlaybooks);
   }
 
-  // 3. Plugin-bundled playbooks (already collected during initializePlugins)
-  const pluginPlaybooks = (context.playbooks as Playbook[] | undefined) || [];
   allPlaybooks.push(...pluginPlaybooks);
 
   context.playbooks = allPlaybooks;

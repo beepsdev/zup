@@ -1,27 +1,11 @@
-/**
- * Playbook Injection
- *
- * Formats matched playbooks and appends them to LLM system prompts.
- */
-
 import type { Playbook } from './types';
 
-/**
- * Format playbooks into a section suitable for system prompt injection.
- */
 export function buildPlaybookSection(playbooks: Playbook[]): string {
   return playbooks
     .map(pb => `### Playbook: ${pb.name}\n\n${pb.content}`)
     .join('\n\n---\n\n');
 }
 
-/**
- * Build an augmented system prompt by appending matched playbooks.
- *
- * Returns the base prompt unchanged if no playbooks are provided.
- * Otherwise, appends a formatted section containing operational knowledge
- * from the matched playbooks.
- */
 export function buildAugmentedSystemPrompt(
   basePrompt: string,
   playbooks: Playbook[]

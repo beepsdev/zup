@@ -48,6 +48,8 @@ export {
   buildPlaybookSection,
 } from './playbook';
 
+export { SEVERITY_LEVELS, meetsThreshold } from './types/index';
+
 export type {
   Awaitable,
   RiskLevel,

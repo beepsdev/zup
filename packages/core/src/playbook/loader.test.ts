@@ -165,6 +165,18 @@ priority: 5
     expect(pb.source).toBe('inline');
   });
 
+  test('lowercases keywords at parse time', () => {
+    const raw = `---
+name: Test
+description: Test
+trigger:
+  keywords: [CPU, Error Rate, TIMEOUT]
+---
+Content`;
+    const pb = parsePlaybook(raw);
+    expect(pb.trigger?.keywords).toEqual(['cpu', 'error rate', 'timeout']);
+  });
+
   test('generates ID from filename when not in frontmatter', () => {
     const pb = parsePlaybook(VALID_PLAYBOOK, {
       sourcePath: '/path/to/High-Error-Rate.md',

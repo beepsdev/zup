@@ -83,6 +83,7 @@ describe('matchPlaybooks', () => {
 
   describe('keyword trigger', () => {
     test('matches keyword in observation data', () => {
+      // Keywords are expected to be pre-lowercased (loader does this at parse time)
       const pb = makePlaybook({ trigger: { keywords: ['error rate'] } });
       const obs = makeObservation({ data: { message: 'High error rate detected' } });
       const result = matchPlaybooks([pb], [obs], 'orient');
@@ -90,7 +91,7 @@ describe('matchPlaybooks', () => {
     });
 
     test('matches keyword case-insensitively', () => {
-      const pb = makePlaybook({ trigger: { keywords: ['CPU'] } });
+      const pb = makePlaybook({ trigger: { keywords: ['cpu'] } });
       const obs = makeObservation({ data: { metric: 'cpu_usage' } });
       const result = matchPlaybooks([pb], [obs], 'orient');
       expect(result).toHaveLength(1);

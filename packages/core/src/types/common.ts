@@ -10,7 +10,22 @@ export type LoopPhase = 'observe' | 'orient' | 'decide' | 'act' | 'idle';
 
 export type ObservationType = 'metric' | 'log' | 'alert' | 'event' | 'state';
 
-export type ObservationSeverity = 'info' | 'warning' | 'error' | 'critical';
+export const SEVERITY_LEVELS = ['info', 'warning', 'error', 'critical'] as const;
+
+export type ObservationSeverity = (typeof SEVERITY_LEVELS)[number];
+
+/**
+ * Returns true if `severity` meets or exceeds `threshold`.
+ */
+export function meetsThreshold(
+  severity: string | undefined,
+  threshold: ObservationSeverity
+): boolean {
+  if (!severity) return false;
+  const sevIdx = SEVERITY_LEVELS.indexOf(severity as ObservationSeverity);
+  const threshIdx = SEVERITY_LEVELS.indexOf(threshold);
+  return sevIdx >= threshIdx;
+}
 
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 

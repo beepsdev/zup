@@ -1,24 +1,15 @@
-/**
- * Playbook Loader
- *
- * Parses markdown files with YAML frontmatter into Playbook objects.
- * Uses a minimal frontmatter parser — no external YAML dependency needed.
- */
-
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { z } from 'zod';
+import { SEVERITY_LEVELS } from '../types/common';
 import type { Playbook, PlaybookTrigger } from './types';
 
-/**
- * Zod schema for validated playbook frontmatter.
- */
 const PlaybookFrontmatterSchema = z.object({
   id: z.string().optional(),
   name: z.string(),
   description: z.string(),
   trigger: z.object({
-    severity: z.enum(['info', 'warning', 'error', 'critical']).optional(),
+    severity: z.enum(SEVERITY_LEVELS).optional(),
     keywords: z.array(z.string()).optional(),
     sources: z.array(z.string()).optional(),
   }).optional(),
@@ -26,17 +17,6 @@ const PlaybookFrontmatterSchema = z.object({
   priority: z.number().optional(),
 });
 
-type ParsedFrontmatter = z.infer<typeof PlaybookFrontmatterSchema>;
-
-/**
- * Minimal YAML frontmatter parser.
- *
- * Handles the subset needed for playbooks:
- * - Simple key: value pairs (strings, numbers, booleans)
- * - Inline arrays: [a, b, c]
- * - Dash arrays under a key
- * - One-level nested objects (e.g., trigger.severity)
- */
 export function parseFrontmatter(raw: string): { metadata: Record<string, unknown>; content: string } {
   const trimmed = raw.trimStart();
   if (!trimmed.startsWith('---\n') && !trimmed.startsWith('---\r\n')) {
@@ -52,7 +32,6 @@ export function parseFrontmatter(raw: string): { metadata: Record<string, unknow
   }
 
   const yamlBlock = rest.slice(0, closingIdx);
-  // Content starts after the closing --- and its newline
   const afterClosing = rest.slice(closingIdx + 4); // '\n---'.length = 4
   const content = afterClosing.startsWith('\n') ? afterClosing.slice(1) : afterClosing;
 
@@ -67,7 +46,6 @@ function parseYamlBlock(block: string): Record<string, unknown> {
   let currentArray: string[] | null = null;
 
   for (const line of lines) {
-    // Skip empty lines and comments
     if (line.trim() === '' || line.trim().startsWith('#')) continue;
 
     const indented = line.startsWith('  ') || line.startsWith('\t');
@@ -75,7 +53,6 @@ function parseYamlBlock(block: string): Record<string, unknown> {
     if (indented && currentKey !== null) {
       const trimmedLine = line.trim();
 
-      // Dash array item: - value
       if (trimmedLine.startsWith('- ')) {
         const value = trimmedLine.slice(2).trim();
         if (currentArray === null) {
@@ -86,7 +63,6 @@ function parseYamlBlock(block: string): Record<string, unknown> {
         continue;
       }
 
-      // Nested key: value (one level deep)
       const nestedMatch = trimmedLine.match(/^(\w[\w-]*)\s*:\s*(.*)$/);
       if (nestedMatch) {
         const [, nestedKey, nestedValue] = nestedMatch;
@@ -99,17 +75,15 @@ function parseYamlBlock(block: string): Record<string, unknown> {
       }
     }
 
-    // Top-level key: value
     const topMatch = line.match(/^(\w[\w-]*)\s*:\s*(.*)$/);
     if (topMatch) {
-      // Flush any pending array
       currentArray = null;
 
       const [, key, rawValue] = topMatch;
       const value = rawValue!.trim();
 
-      if (value === '' || value === '|' || value === '>') {
-        // Key with no inline value — next indented lines are nested object or array
+      if (value === '') {
+        // Key with no inline value -- next indented lines are nested object or array
         currentKey = key!;
         result[currentKey] = {};
         continue;
@@ -124,22 +98,18 @@ function parseYamlBlock(block: string): Record<string, unknown> {
 }
 
 function parseValue(value: string): unknown {
-  // Inline array: [a, b, c]
   if (value.startsWith('[') && value.endsWith(']')) {
     const inner = value.slice(1, -1).trim();
     if (inner === '') return [];
     return inner.split(',').map(item => stripQuotes(item.trim()));
   }
 
-  // Boolean
   if (value === 'true') return true;
   if (value === 'false') return false;
 
-  // Number
   const num = Number(value);
   if (value !== '' && !isNaN(num) && String(num) === value) return num;
 
-  // String (strip quotes if present)
   return stripQuotes(value);
 }
 
@@ -156,9 +126,6 @@ export type ParsePlaybookOptions = {
   pluginId?: string;
 };
 
-/**
- * Parse a raw markdown string (with frontmatter) into a Playbook.
- */
 export function parsePlaybook(raw: string, options: ParsePlaybookOptions = {}): Playbook {
   const { metadata, content } = parseFrontmatter(raw);
   const validated = PlaybookFrontmatterSchema.parse(metadata);
@@ -168,10 +135,11 @@ export function parsePlaybook(raw: string, options: ParsePlaybookOptions = {}): 
       ? basename(options.sourcePath, '.md').toLowerCase().replace(/[^a-z0-9]+/g, '-')
       : 'unknown');
 
+  // Pre-lowercase keywords so the matcher doesn't repeat this every loop iteration
   const trigger: PlaybookTrigger | undefined = validated.trigger
     ? {
         severity: validated.trigger.severity,
-        keywords: validated.trigger.keywords,
+        keywords: validated.trigger.keywords?.map(kw => kw.toLowerCase()),
         sources: validated.trigger.sources,
       }
     : undefined;
@@ -207,22 +175,30 @@ export async function loadPlaybooksFromDir(
     return [];
   }
 
-  const playbooks: Playbook[] = [];
-
-  for (const filename of entries) {
-    const filePath = join(dirPath, filename);
-    try {
-      const raw = await readFile(filePath, 'utf-8');
-      const playbook = parsePlaybook(raw, {
+  const results = await Promise.allSettled(
+    entries.map(async (filename) => {
+      const filePath = join(dirPath, filename);
+      const raw = await Bun.file(filePath).text();
+      return parsePlaybook(raw, {
         source: 'filesystem',
         sourcePath: filePath,
       });
-      playbooks.push(playbook);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      logger?.warn(`Failed to parse playbook ${filename}: ${message}`);
+    })
+  );
+
+  const playbooks: Playbook[] = [];
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i]!;
+    if (result.status === 'fulfilled') {
+      playbooks.push(result.value);
+    } else {
+      const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      logger?.warn(`Failed to parse playbook ${entries[i]}: ${message}`);
     }
   }
+
+  // Pre-sort by priority so matchPlaybooks can skip sorting on the hot path
+  playbooks.sort((a, b) => b.priority - a.priority);
 
   return playbooks;
 }

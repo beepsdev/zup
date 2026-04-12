@@ -1,29 +1,13 @@
-/**
- * Playbook Matcher
- *
- * Determines which playbooks activate given current observations and OODA phase.
- */
-
 import type { Playbook } from './types';
 import type { Observation } from '../types/observation';
 import type { Situation } from '../types/situation';
 import type { ObservationSeverity } from '../types/common';
-
-const SEVERITY_ORDER: ObservationSeverity[] = ['info', 'warning', 'error', 'critical'];
+import { meetsThreshold } from '../types/common';
 
 /**
- * Match playbooks against current observations for a given OODA phase.
- *
- * A playbook matches if:
- * 1. It applies to the given phase
- * 2. ALL specified trigger conditions are met (AND logic)
- *    - severity: any observation meets the threshold
- *    - keywords: any keyword found in any observation's data
- *    - sources: any observation source matches a prefix
- *    - custom: custom function returns true
- * 3. No trigger = always matches (catch-all playbook)
- *
- * Returns matched playbooks sorted by priority descending (highest first).
+ * Returns playbooks matching current observations for a given OODA phase.
+ * Trigger conditions use AND logic. No trigger = always matches.
+ * Input playbooks should be pre-sorted by priority (loader does this).
  */
 export function matchPlaybooks(
   playbooks: Playbook[],
@@ -63,19 +47,15 @@ export function matchPlaybooks(
 }
 
 function matchesSeverity(observations: Observation[], threshold: ObservationSeverity): boolean {
-  const thresholdIdx = SEVERITY_ORDER.indexOf(threshold);
-  return observations.some(obs => {
-    if (!obs.severity) return false;
-    const obsIdx = SEVERITY_ORDER.indexOf(obs.severity as ObservationSeverity);
-    return obsIdx >= thresholdIdx;
-  });
+  return observations.some(obs => meetsThreshold(obs.severity, threshold));
 }
 
+// Keywords are pre-lowercased at parse time
 function matchesKeywords(observations: Observation[], keywords: string[]): boolean {
   const obsText = observations
     .map(o => `${o.source} ${JSON.stringify(o.data)}`.toLowerCase())
     .join(' ');
-  return keywords.some(kw => obsText.includes(kw.toLowerCase()));
+  return keywords.some(kw => obsText.includes(kw));
 }
 
 function matchesSources(observations: Observation[], sources: string[]): boolean {

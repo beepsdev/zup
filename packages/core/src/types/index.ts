@@ -15,6 +15,8 @@ export type {
   Logger,
 } from './common';
 
+export { SEVERITY_LEVELS, meetsThreshold } from './common';
+
 // Observation types
 export type {
   Observation,

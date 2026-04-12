@@ -13,7 +13,7 @@ import type { Playbook } from './playbook/types';
 export async function initializePlugins(
   ctx: AgentContext,
   plugins: ZupPlugin[]
-): Promise<{ context: AgentContext; options: AgentOptions }> {
+): Promise<{ context: AgentContext; options: AgentOptions; pluginPlaybooks: Playbook[] }> {
   let context = ctx;
   let options = ctx.options;
 
@@ -40,14 +40,7 @@ export async function initializePlugins(
 
   context.options = options;
 
-  // Collect playbooks bundled with plugins
-  const pluginPlaybooks = collectPluginPlaybooks(plugins);
-  if (pluginPlaybooks.length > 0) {
-    const existing = (context.playbooks as Playbook[] | undefined) || [];
-    context.playbooks = [...existing, ...pluginPlaybooks];
-  }
-
-  return { context, options };
+  return { context, options, pluginPlaybooks: collectPluginPlaybooks(plugins) };
 }
 
 function registerPluginCapabilities(ctx: AgentContext, plugin: ZupPlugin): void {
