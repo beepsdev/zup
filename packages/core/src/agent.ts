@@ -14,6 +14,8 @@ import { registerRunRoutes } from './api/run-routes';
 import type { ApiServer } from './api/types';
 import { createLLMCapability } from './llm';
 import { createSQLiteCapability } from './db';
+import { loadPlaybooksFromDir } from './playbook';
+import type { Playbook } from './playbook/types';
 
 export async function createAgent(options: AgentOptions = {}) {
   const logger = options.logger || console;
@@ -70,6 +72,43 @@ export async function createAgent(options: AgentOptions = {}) {
 
   context = initializedContext;
   context.options = mergedOptions;
+
+  // Load and merge playbooks from all sources
+  const allPlaybooks: Playbook[] = [];
+
+  // 1. Inline playbooks from options
+  if (mergedOptions.playbooks) {
+    allPlaybooks.push(
+      ...(mergedOptions.playbooks as Playbook[]).map(p => ({
+        ...p,
+        source: 'inline' as const,
+      }))
+    );
+  }
+
+  // 2. Filesystem playbooks
+  if (mergedOptions.playbooksDir) {
+    const fsPlaybooks = await loadPlaybooksFromDir(
+      mergedOptions.playbooksDir as string,
+      logger as { warn: (msg: string, ...args: unknown[]) => void },
+    );
+    allPlaybooks.push(...fsPlaybooks);
+  }
+
+  // 3. Plugin-bundled playbooks (already collected during initializePlugins)
+  const pluginPlaybooks = (context.playbooks as Playbook[] | undefined) || [];
+  allPlaybooks.push(...pluginPlaybooks);
+
+  context.playbooks = allPlaybooks;
+
+  if (allPlaybooks.length > 0) {
+    logger.info(`Loaded ${allPlaybooks.length} playbook(s)`, {
+      inline: allPlaybooks.filter(p => p.source === 'inline').length,
+      filesystem: allPlaybooks.filter(p => p.source === 'filesystem').length,
+      plugin: allPlaybooks.filter(p => p.source === 'plugin').length,
+    });
+  }
+
   let loopPromise: Promise<LoopResult> | null = null;
 
   return {

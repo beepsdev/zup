@@ -17,16 +17,16 @@ import type {
 } from './types';
 import { zodToJsonSchema } from '../utils/zod-to-json-schema';
 
-const DEFAULT_SYSTEM_PROMPT = `You are an SRE investigation agent. Your job is to deeply analyze 
+export const DEFAULT_INVESTIGATION_SYSTEM_PROMPT = `You are an SRE investigation agent. Your job is to deeply analyze
 system observations and determine root cause.
 
 Use the available tools to:
 - Query logs for error patterns
-- Check metrics for anomalies  
+- Check metrics for anomalies
 - Correlate events across services
 - Verify service health
 
-Be thorough but efficient. When you have enough information to explain what's happening, 
+Be thorough but efficient. When you have enough information to explain what's happening,
 provide your findings without calling more tools.`;
 
 const DEFAULT_MAX_TURNS = 20;
@@ -86,7 +86,7 @@ export async function runInvestigation(
     throw new Error('LLM capability required for investigation');
   }
 
-  const { tools, maxTurns = DEFAULT_MAX_TURNS, systemPrompt = DEFAULT_SYSTEM_PROMPT } = config;
+  const { tools, maxTurns = DEFAULT_MAX_TURNS, systemPrompt = DEFAULT_INVESTIGATION_SYSTEM_PROMPT } = config;
   const messages: InvestigationMessage[] = [{ role: 'user', content: prompt }];
   const toolsUsed: Set<string> = new Set();
   const toolDefinitions = toolsToDefinitions(tools);

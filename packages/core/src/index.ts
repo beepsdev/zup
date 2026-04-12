@@ -38,6 +38,16 @@ export {
   createAISDKProvider,
 } from './llm';
 
+// Playbook system
+export {
+  parseFrontmatter,
+  parsePlaybook,
+  loadPlaybooksFromDir,
+  matchPlaybooks,
+  buildAugmentedSystemPrompt,
+  buildPlaybookSection,
+} from './playbook';
+
 export type {
   Awaitable,
   RiskLevel,
@@ -85,4 +95,6 @@ export type {
   RunPriority,
   RunResult,
   CreateRunInput,
+  Playbook,
+  PlaybookTrigger,
 } from './types/index';

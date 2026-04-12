@@ -13,6 +13,6 @@ export type {
   InvestigationToolCall,
 } from './types';
 
-export { runInvestigation } from './loop';
+export { runInvestigation, DEFAULT_INVESTIGATION_SYSTEM_PROMPT } from './loop';
 export { createInvestigationTool } from './tool-helper';
 export type { CreateToolOptions } from './tool-helper';

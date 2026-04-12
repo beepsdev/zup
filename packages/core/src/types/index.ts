@@ -95,3 +95,9 @@ export type {
   SQLiteConfig,
   SQLiteCapability,
 } from '../db/index';
+
+// Playbook types
+export type {
+  Playbook,
+  PlaybookTrigger,
+} from '../playbook/types';

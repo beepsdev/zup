@@ -14,6 +14,7 @@ import type { DecisionStrategy, Decision } from './decision';
 import type { Action, ActionResult } from './action';
 import type { LoopResult } from './context';
 import type { Awaitable } from './common';
+import type { Playbook } from '../playbook/types';
 
 /**
  * Endpoint definition for REST API
@@ -114,6 +115,12 @@ export type ZupPlugin = {
    * State/Memory schema
    */
   schema?: StateSchema;
+
+  /**
+   * Bundled playbooks — operational knowledge that augments LLM context
+   * during orient/decide phases when triggered by matching observations.
+   */
+  playbooks?: Playbook[];
 
   /**
    * Type inference helper (advanced, optional)

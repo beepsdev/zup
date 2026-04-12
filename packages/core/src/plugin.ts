@@ -8,6 +8,7 @@ import type {
   DecisionStrategy,
   Action,
 } from './types/index';
+import type { Playbook } from './playbook/types';
 
 export async function initializePlugins(
   ctx: AgentContext,
@@ -38,6 +39,13 @@ export async function initializePlugins(
   }
 
   context.options = options;
+
+  // Collect playbooks bundled with plugins
+  const pluginPlaybooks = collectPluginPlaybooks(plugins);
+  if (pluginPlaybooks.length > 0) {
+    const existing = (context.playbooks as Playbook[] | undefined) || [];
+    context.playbooks = [...existing, ...pluginPlaybooks];
+  }
 
   return { context, options };
 }
@@ -96,6 +104,22 @@ export async function executePluginHooks<T extends keyof ZupPlugin>(
   }
 
   return results;
+}
+
+function collectPluginPlaybooks(plugins: ZupPlugin[]): Playbook[] {
+  const playbooks: Playbook[] = [];
+  for (const plugin of plugins) {
+    if (plugin.playbooks) {
+      for (const playbook of plugin.playbooks) {
+        playbooks.push({
+          ...playbook,
+          source: 'plugin',
+          pluginId: plugin.id,
+        });
+      }
+    }
+  }
+  return playbooks;
 }
 
 export function definePlugin(plugin: ZupPlugin): ZupPlugin {

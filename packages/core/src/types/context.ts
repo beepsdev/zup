@@ -10,6 +10,7 @@ import type { Situation, Decision } from './index';
 import type { LoopPhase, Logger } from './common';
 import type { LLMConfig, LLMCapability } from '../llm/types';
 import type { SQLiteConfig, SQLiteCapability } from '../db/index';
+import type { Playbook } from '../playbook/types';
 
 export type StateStore = {
   get: (key: string) => unknown;
@@ -92,6 +93,12 @@ export type AgentOptions = {
 
   // SQLite database configuration (optional)
   sqlite?: SQLiteConfig;
+
+  // Playbooks — markdown-based operational knowledge for LLM context
+  /** Directory path to load playbook .md files from */
+  playbooksDir?: string;
+  /** Inline playbook definitions */
+  playbooks?: Playbook[];
 
   // Other configuration
   [key: string]: unknown;

@@ -16,15 +16,21 @@ import {
 } from '../../index';
 import {
   runInvestigation,
+  DEFAULT_INVESTIGATION_SYSTEM_PROMPT,
   type InvestigationTool,
   type InvestigationResult,
 } from '../../investigation';
+import { matchPlaybooks } from '../../playbook/matcher';
+import { buildAugmentedSystemPrompt } from '../../playbook/inject';
+import type { Playbook } from '../../playbook/types';
 
 export type InvestigationOrienterConfig = {
   tools: InvestigationTool[];
   maxTurns?: number;
   systemPrompt?: string;
   triggerSeverity?: 'info' | 'warning' | 'error' | 'critical';
+  /** Enable playbook injection into investigation system prompt. Default: true */
+  enablePlaybooks?: boolean;
 };
 
 const SEVERITY_ORDER = ['info', 'warning', 'error', 'critical'] as const;
@@ -99,7 +105,7 @@ function extractImpact(findings: string): string | undefined {
 }
 
 export const investigationOrienter = (config: InvestigationOrienterConfig) => {
-  const { tools, maxTurns = 15, systemPrompt, triggerSeverity = 'warning' } = config;
+  const { tools, maxTurns = 15, systemPrompt, triggerSeverity = 'warning', enablePlaybooks = true } = config;
 
   if (tools.length === 0) {
     throw new Error('investigationOrienter: At least one tool must be configured');
@@ -133,6 +139,25 @@ export const investigationOrienter = (config: InvestigationOrienterConfig) => {
           // Build investigation prompt from observations
           const prompt = buildInvestigationPrompt(observations);
 
+          // Match and inject playbooks into system prompt
+          let effectiveSystemPrompt = systemPrompt;
+          if (enablePlaybooks) {
+            const allPlaybooks = (ctx.playbooks as Playbook[] | undefined) || [];
+            if (allPlaybooks.length > 0) {
+              const matched = matchPlaybooks(allPlaybooks, observations, 'orient');
+              if (matched.length > 0) {
+                ctx.logger.info('[investigation-orienter] Matched playbook(s)', {
+                  count: matched.length,
+                  names: matched.map(p => p.name),
+                });
+                effectiveSystemPrompt = buildAugmentedSystemPrompt(
+                  systemPrompt || DEFAULT_INVESTIGATION_SYSTEM_PROMPT,
+                  matched,
+                );
+              }
+            }
+          }
+
           ctx.logger.info('[investigation-orienter] Starting deep investigation', {
             observationCount: observations.length,
           });
@@ -141,7 +166,7 @@ export const investigationOrienter = (config: InvestigationOrienterConfig) => {
           const result = await runInvestigation(ctx, prompt, {
             tools,
             maxTurns,
-            systemPrompt,
+            systemPrompt: effectiveSystemPrompt,
           });
 
           ctx.logger.info('[investigation-orienter] Investigation complete', {
