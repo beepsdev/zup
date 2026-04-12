@@ -53,6 +53,21 @@ export const myPlugin = () => definePlugin({
 
 See [Plugin Overview](/docs/plugins/) for the full catalog and [Writing a Plugin](/docs/plugins/authoring/) for a step-by-step guide.
 
+## Playbooks
+
+Playbooks are markdown files that get fed into the LLM during Orient and Decide. Plugins are deterministic code for execution; playbooks carry the operational knowledge -- what your team learned from incident retros, system quirks, and runbooks.
+
+```
+playbooks/
+  high-error-rate.md       # your team wrote this after an incident
+  deployment-rollback.md   # when to roll back vs. debug
+  our-weird-legacy-api.md  # tribal knowledge nobody wants to lose
+```
+
+Playbooks are matched against current observations (by severity, keywords, source) and appended to the investigation system prompt. Anyone can write them -- it's just markdown.
+
+See [Playbooks](/docs/playbooks/) for the full guide.
+
 ## Agent lifecycle
 
 ```ts

@@ -62,6 +62,38 @@ Each loop iteration:
 3. **Decide** - Choose action via decision strategies
 4. **Act** - Execute remediation via actions
 
+### Playbooks
+
+Playbooks are markdown files that get fed into the LLM during the Orient and Decide phases. Anyone on the team can write runbooks, incident learnings, and system-specific context in plain markdown.
+
+```typescript
+const agent = await createAgent({
+  playbooksDir: './playbooks',
+  plugins: [
+    investigationOrienter({ tools: [...] }),
+  ],
+});
+```
+
+A playbook file (`playbooks/high-error-rate.md`):
+
+```markdown
+---
+name: High Error Rate
+description: Handling sustained high error rates
+trigger:
+  severity: warning
+  keywords: [error rate, 5xx]
+---
+
+When error rates spike after a recent deployment:
+1. Check if a rollback is safer than debugging
+2. If < 10 minutes since deploy, prefer rollback
+3. The /health endpoint returns 200 even when degraded -- check the response body
+```
+
+Playbooks are matched against observations and appended to the investigation system prompt. See the [Playbooks docs](https://zup.dev/docs/playbooks/) for details.
+
 ### Plugins
 
 Plugins provide capabilities at each phase:

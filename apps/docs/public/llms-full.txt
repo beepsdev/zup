@@ -574,6 +574,21 @@ export const myPlugin = () => definePlugin({
 
 See [Plugin Overview](/docs/plugins/) for the full catalog and [Writing a Plugin](/docs/plugins/authoring/) for a step-by-step guide.
 
+## Playbooks
+
+Playbooks are markdown files that inject operational knowledge into LLM context during the Orient and Decide phases. While plugins provide deterministic code for execution, playbooks teach the LLM _when_ and _why_ -- the institutional knowledge from incident retros, system quirks, and operational runbooks.
+
+```
+playbooks/
+  high-error-rate.md       # your team wrote this after an incident
+  deployment-rollback.md   # when to roll back vs. debug
+  our-weird-legacy-api.md  # tribal knowledge nobody wants to lose
+```
+
+Playbooks are automatically matched against current observations (by severity, keywords, source) and injected into the investigation system prompt. Anyone on the team can contribute them -- no TypeScript required.
+
+See [Playbooks](/docs/playbooks/) for the full guide.
+
 ## Agent lifecycle
 
 ```ts
@@ -841,6 +856,24 @@ const server = agent.startApi({
 |---|---|---|---|
 | `approvals.autoExpire` | `boolean` | `true` | Automatically expire stale pending approvals. |
 | `approvals.ttlMs` | `number` | `3600000` (1 hour) | Time-to-live for pending approvals in milliseconds. |
+
+### Playbooks
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `playbooksDir` | `string` | -- | Directory path to load playbook `.md` files from. |
+| `playbooks` | `Playbook[]` | -- | Inline playbook definitions. |
+
+Playbooks are markdown files that inject operational knowledge into LLM context during orient/decide phases. See [Playbooks](/docs/playbooks/) for the full guide.
+
+```ts
+const agent = await createAgent({
+  playbooksDir: './playbooks',
+  plugins: [
+    investigationOrienter({ tools: [...] }),
+  ],
+});
+```
 
 ### Plugins
 
@@ -2374,6 +2407,32 @@ schema: {
 },
 ```
 
+## Step 9: Bundle playbooks
+
+Plugins can ship [playbooks](/docs/playbooks/) -- markdown-based operational knowledge that gets injected into the LLM's context during orient/decide phases:
+
+```ts
+// Inside your definePlugin call:
+playbooks: [
+  {
+    id: 'disk-monitor/cleanup-patterns',
+    name: 'Disk Cleanup Patterns',
+    description: 'Known patterns for disk space issues',
+    phases: ['orient'],
+    priority: 0,
+    content: `When disk usage spikes suddenly, check:
+1. Log rotation -- logs that stopped rotating fill disks fast
+2. Core dumps -- crashed processes may leave large core files
+3. Temp files -- build artifacts or uploads not being cleaned up
+
+If /tmp is full, it's almost always a process leak, not real data growth.`,
+    source: 'plugin',
+  },
+],
+```
+
+Bundled playbooks are automatically collected when the plugin initializes. They're matched against observations just like filesystem playbooks -- the LLM gets them in context when relevant.
+
 ## Putting it all together
 
 ```ts
@@ -3088,16 +3147,19 @@ This plugin requires an LLM to be configured on the agent. The LLM drives the in
 | `maxTurns` | `number` | `15` | Maximum number of LLM tool-calling turns before the investigation is stopped. Prevents runaway investigations. |
 | `systemPrompt` | `string` | -- | Custom system prompt for the investigation LLM. Overrides the default investigation prompt. |
 | `triggerSeverity` | `ObservationSeverity` | `'warning'` | Minimum observation severity required to trigger an investigation. Observations below this threshold are skipped. |
+| `enablePlaybooks` | `boolean` | `true` | Enable automatic playbook injection into the investigation system prompt. See [Playbooks](/docs/playbooks/). |
 
 ## How it works
 
 1. **Severity check:** The orienter scans all observations from the Observe phase. If none meet the `triggerSeverity` threshold, it returns a simple "no significant observations" assessment without invoking the LLM.
 
-2. **Prompt construction:** When triggered, the plugin builds a prompt from the current observations, asking the LLM to determine root cause, impact, affected services, and recommended actions.
+2. **Playbook matching:** If playbooks are loaded on the agent (via `playbooksDir`, inline, or plugin-bundled), the orienter matches them against current observations. Matched playbooks are appended to the investigation system prompt, giving the LLM your team's operational knowledge during the investigation.
 
-3. **Tool-calling loop:** The LLM enters a multi-turn loop where it can call any of the configured tools. Each tool call is executed and the result is fed back to the LLM. This continues until the LLM produces a final answer or `maxTurns` is reached.
+3. **Prompt construction:** The plugin builds a prompt from the current observations, asking the LLM to determine root cause, impact, affected services, and recommended actions.
 
-4. **Assessment extraction:** The LLM's final findings are parsed into a `SituationAssessment` with extracted root cause (as `contributingFactor`) and impact assessment. If the investigation completed normally, confidence is set to `0.85`. If it was cut short by the turn limit, confidence drops to `0.6` and the assessment is marked incomplete.
+4. **Tool-calling loop:** The LLM enters a multi-turn loop where it can call any of the configured tools. Each tool call is executed and the result is fed back to the LLM. This continues until the LLM produces a final answer or `maxTurns` is reached.
+
+5. **Assessment extraction:** The LLM's final findings are parsed into a `SituationAssessment` with extracted root cause (as `contributingFactor`) and impact assessment. If the investigation completed normally, confidence is set to `0.85`. If it was cut short by the turn limit, confidence drops to `0.6` and the assessment is marked incomplete.
 
 ## Investigation tools
 

@@ -31,6 +31,7 @@ export default defineConfig({
             { label: 'Agent Configuration', link: '/agent-config/' },
             { label: 'The OODA Loop', link: '/ooda-loop/' },
             { label: 'State & Persistence', link: '/state/' },
+            { label: 'Playbooks', link: '/playbooks/' },
             { label: 'Approval Queue', link: '/approvals/' },
           ],
         },

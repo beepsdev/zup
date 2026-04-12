@@ -394,6 +394,32 @@ schema: {
 },
 ```
 
+## Step 9: Bundle playbooks
+
+Plugins can ship [playbooks](/docs/playbooks/) -- markdown that gets fed to the LLM during orient/decide:
+
+```ts
+// Inside your definePlugin call:
+playbooks: [
+  {
+    id: 'disk-monitor/cleanup-patterns',
+    name: 'Disk Cleanup Patterns',
+    description: 'Known patterns for disk space issues',
+    phases: ['orient'],
+    priority: 0,
+    content: `When disk usage spikes suddenly, check:
+1. Log rotation -- logs that stopped rotating fill disks fast
+2. Core dumps -- crashed processes may leave large core files
+3. Temp files -- build artifacts or uploads not being cleaned up
+
+If /tmp is full, it's almost always a process leak, not real data growth.`,
+    source: 'plugin',
+  },
+],
+```
+
+Bundled playbooks are collected at plugin init and matched against observations like any other playbook.
+
 ## Putting it all together
 
 ```ts

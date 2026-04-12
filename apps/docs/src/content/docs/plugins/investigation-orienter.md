@@ -39,16 +39,19 @@ This plugin requires an LLM to be configured on the agent. The LLM drives the in
 | `maxTurns` | `number` | `15` | Maximum number of LLM tool-calling turns before the investigation is stopped. Prevents runaway investigations. |
 | `systemPrompt` | `string` | -- | Custom system prompt for the investigation LLM. Overrides the default investigation prompt. |
 | `triggerSeverity` | `ObservationSeverity` | `'warning'` | Minimum observation severity required to trigger an investigation. Observations below this threshold are skipped. |
+| `enablePlaybooks` | `boolean` | `true` | Enable automatic playbook injection into the investigation system prompt. See [Playbooks](/docs/playbooks/). |
 
 ## How it works
 
 1. **Severity check:** The orienter scans all observations from the Observe phase. If none meet the `triggerSeverity` threshold, it returns a simple "no significant observations" assessment without invoking the LLM.
 
-2. **Prompt construction:** When triggered, the plugin builds a prompt from the current observations, asking the LLM to determine root cause, impact, affected services, and recommended actions.
+2. **Playbook matching:** If playbooks are loaded on the agent (via `playbooksDir`, inline, or plugin-bundled), the orienter matches them against current observations and appends them to the system prompt. See [Playbooks](/docs/playbooks/).
 
-3. **Tool-calling loop:** The LLM enters a multi-turn loop where it can call any of the configured tools. Each tool call is executed and the result is fed back to the LLM. This continues until the LLM produces a final answer or `maxTurns` is reached.
+3. **Prompt construction:** The plugin builds a prompt from the current observations, asking the LLM to determine root cause, impact, affected services, and recommended actions.
 
-4. **Assessment extraction:** The LLM's final findings are parsed into a `SituationAssessment` with extracted root cause (as `contributingFactor`) and impact assessment. If the investigation completed normally, confidence is set to `0.85`. If it was cut short by the turn limit, confidence drops to `0.6` and the assessment is marked incomplete.
+4. **Tool-calling loop:** The LLM enters a multi-turn loop where it can call any of the configured tools. Each tool call is executed and the result is fed back to the LLM. This continues until the LLM produces a final answer or `maxTurns` is reached.
+
+5. **Assessment extraction:** The LLM's final findings are parsed into a `SituationAssessment` with extracted root cause (as `contributingFactor`) and impact assessment. If the investigation completed normally, confidence is set to `0.85`. If it was cut short by the turn limit, confidence drops to `0.6` and the assessment is marked incomplete.
 
 ## Investigation tools
 

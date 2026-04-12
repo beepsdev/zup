@@ -220,6 +220,24 @@ const server = agent.startApi({
 | `approvals.autoExpire` | `boolean` | `true` | Automatically expire stale pending approvals. |
 | `approvals.ttlMs` | `number` | `3600000` (1 hour) | Time-to-live for pending approvals in milliseconds. |
 
+### Playbooks
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `playbooksDir` | `string` | -- | Directory path to load playbook `.md` files from. |
+| `playbooks` | `Playbook[]` | -- | Inline playbook definitions. |
+
+Playbooks are markdown files that get fed into the LLM during orient/decide phases. See [Playbooks](/docs/playbooks/) for details.
+
+```ts
+const agent = await createAgent({
+  playbooksDir: './playbooks',
+  plugins: [
+    investigationOrienter({ tools: [...] }),
+  ],
+});
+```
+
 ### Plugins
 
 ```ts
