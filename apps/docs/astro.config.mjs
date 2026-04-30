@@ -15,6 +15,7 @@ export default defineConfig({
         replacesTitle: true,
       },
       description: 'Open source AI SRE agent framework documentation.',
+      social: [],
       sidebar: [
         {
           label: 'Getting Started',
