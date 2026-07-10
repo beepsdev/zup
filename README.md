@@ -29,6 +29,8 @@ import { historianPlugin } from 'zupdev/plugins/historian';
 
 const agent = await createAgent({
   name: 'my-agent',
+  mode: 'continuous',   // 'manual' (default) | 'continuous' | 'event-driven'
+  loopInterval: 30000,  // ms between loops in continuous mode
   llm: {
     provider: 'anthropic',
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -47,8 +49,8 @@ const agent = await createAgent({
 const result = await agent.runLoop();
 // Note: observer intervals are enforced only in continuous mode.
 
-// Or run continuously
-await agent.start({ intervalMs: 30000 });
+// Or run continuously (uses mode/loopInterval from createAgent)
+await agent.start();
 ```
 
 ## Core Concepts
@@ -64,7 +66,7 @@ Each loop iteration:
 
 ### Playbooks
 
-Playbooks are markdown files that get fed into the LLM during the Orient and Decide phases. Anyone on the team can write runbooks, incident learnings, and system-specific context in plain markdown.
+Playbooks are markdown files containing runbooks, incident learnings, and system-specific context that anyone on the team can write. They are currently consumed by the `investigation-orienter` plugin: during the Orient phase, playbooks matching the current observations are appended to the investigation system prompt. (They do not yet influence the Decide phase, and have no effect unless an orienter that reads them — like `investigation-orienter` — is installed.)
 
 ```typescript
 const agent = await createAgent({
@@ -100,6 +102,7 @@ Plugins provide capabilities at each phase:
 
 ```typescript
 import { definePlugin, createObserver, createOrienter, createDecisionStrategy, createAction } from 'zupdev';
+import { z } from 'zod';
 
 export const myPlugin = () => definePlugin({
   id: 'my-plugin',
@@ -107,6 +110,7 @@ export const myPlugin = () => definePlugin({
   observers: {
     checkHealth: createObserver({
       name: 'health-check',
+      description: 'Check service health',
       observe: async (ctx) => [{
         source: 'my-plugin/health',
         timestamp: new Date(),
@@ -120,6 +124,7 @@ export const myPlugin = () => definePlugin({
   orienters: {
     analyze: createOrienter({
       name: 'analyze',
+      description: 'Analyze health observations',
       orient: async (observations, ctx) => ({
         source: 'my-plugin/analysis',
         findings: ['Service is down'],
@@ -132,6 +137,7 @@ export const myPlugin = () => definePlugin({
   decisionStrategies: {
     restart: createDecisionStrategy({
       name: 'restart-if-down',
+      description: 'Restart the service when it is down',
       applicableWhen: (situation) => situation.priority === 'critical',
       decide: async (situation, ctx) => ({
         action: 'my-plugin:restart',
@@ -147,6 +153,7 @@ export const myPlugin = () => definePlugin({
   actions: {
     restart: createAction({
       name: 'restart',
+      description: 'Restart a service',
       risk: 'low',
       schema: z.object({ service: z.string() }),
       execute: async (params, ctx) => ({
@@ -221,7 +228,7 @@ cloudRun({
 
 ### fly-machines
 
-Monitor and manage Fly.io machines.
+Monitor Fly.io machines and detect deployments via instance/image changes. Observe-only: this plugin provides no restart/scale/manage actions.
 
 ```typescript
 import { flyMachines } from 'zupdev/plugins/fly-machines';
@@ -255,7 +262,7 @@ vercelDeploys({
 
 ### github-activity
 
-Monitor GitHub repository activity including commits, PRs, issues, and deployments.
+Monitor GitHub repository activity: commits and merged PRs, including changed files, for incident correlation. (Issues and deployments are not tracked.)
 
 ```typescript
 import { githubActivity } from 'zupdev/plugins/github-activity';
@@ -321,6 +328,8 @@ investigationOrienter({
 });
 ```
 
+The tools exported from `zupdev/plugins/investigation-orienter/tools` (`queryLogs`, `queryMetrics`, `checkHealth`, etc.) are reference implementations that return canned data. Use them as templates for the tool shape, but wire up your own integrations for production.
+
 ## LLM Integration
 
 Supports 16+ providers via the Vercel AI SDK, including Anthropic, OpenAI, Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, and Vertex AI.
@@ -362,15 +371,19 @@ ctx.sqlite.run('INSERT INTO my_plugin_events (data) VALUES ($data)', { data: 'te
 const agent = await createAgent({
   api: {
     port: 3000,
-    authToken: process.env.ZUP_API_TOKEN,
+    auth: {
+      apiKeys: [{ key: process.env.ZUP_API_TOKEN, name: 'default' }],
+    },
   },
 });
 
+// The API server is started separately from the OODA loop
+agent.startApi();
 await agent.start();
 ```
 
 Endpoints:
-- `GET /health` - Health check (no auth)
+- `GET /api/v0/health` - Health check (no auth)
 - `GET /api/v0/state` - Agent state
 - `GET /api/v0/observations` - Recent observations
 - `GET /api/v0/actions` - Available actions
@@ -407,24 +420,25 @@ packages/
     db/           # SQLite with namespacing
     embedding/    # Embedding capability
     api/          # HTTP API server
-  plugins/
-    http-monitor/    # Health check monitoring
-    cloud-run/       # Google Cloud Run integration
-    fly-machines/    # Fly.io integration
-    vercel-deploys/  # Vercel integration
-    github-activity/ # GitHub integration
-    kubernetes/      # Kubernetes integration
-    historian/       # Incident memory with RAG
-    investigation-orienter/ # Deep investigation orienter
+    playbook/     # Playbook loading and matching
+    plugins/
+      http-monitor/    # Health check monitoring
+      cloud-run/       # Google Cloud Run integration
+      fly-machines/    # Fly.io integration
+      vercel-deploys/  # Vercel integration
+      github-activity/ # GitHub integration
+      kubernetes/      # Kubernetes integration
+      historian/       # Incident memory with RAG
+      investigation-orienter/ # Deep investigation orienter
 ```
 
 ## Development
 
 ```bash
-bun test              # Run tests
-bun typecheck         # Type check
-bun run demo.ts       # Run demo
-bun run llm-demo.ts   # Run LLM demo (requires API key)
+bun test                       # Run tests
+bun typecheck                  # Type check
+bun run examples/demo.ts       # Run demo
+bun run examples/llm-demo.ts   # Run LLM demo (requires API key)
 ```
 
 ## Contributing
