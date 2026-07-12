@@ -89,6 +89,20 @@ export type AgentOptions = {
     maxHistory?: number;
   };
 
+  // Run retention configuration
+  runs?: {
+    /**
+     * How long finished (completed/failed/cancelled) runs are retained
+     * before being pruned, in milliseconds (default: 86400000 — 24 hours).
+     */
+    retentionMs?: number;
+    /**
+     * Maximum number of finished runs to retain regardless of age;
+     * the newest are kept (default: 500).
+     */
+    maxFinished?: number;
+  };
+
   // Plugins
   plugins?: unknown[]; // ZupPlugin[] - circular dependency avoided with unknown
 

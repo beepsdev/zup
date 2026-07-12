@@ -30,6 +30,9 @@ export {
   runToObservation,
   buildRunResult,
   sendCallback,
+  pruneRuns,
+  DEFAULT_RUN_RETENTION_MS,
+  DEFAULT_MAX_FINISHED_RUNS,
 } from './runs';
 
 export {
