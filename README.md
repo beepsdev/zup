@@ -391,7 +391,7 @@ Endpoints:
 - `GET /api/v0/approvals` - Pending approvals
 - `POST /api/v0/approvals/:id/approve` - Approve queued action
 - `POST /api/v0/approvals/:id/deny` - Deny queued action
-- `POST /api/v0/loop/trigger` - Trigger OODA loop
+- `POST /api/v0/loop/trigger` - Trigger OODA loop (pass `{ "async": true }` to get an immediate 202 and poll `/loop/status` instead of waiting)
 - `GET /api/v0/loop/status` - Loop status
 
 Plugins can register additional endpoints.

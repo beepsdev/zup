@@ -51,6 +51,11 @@ export type AgentOptions = {
     enabled?: boolean;
     port?: number;
     host?: string;
+    /**
+     * Maximum seconds a connection may sit idle before Bun closes it.
+     * Bun's default is 10s; max is 255. Defaults to 240 when unset.
+     */
+    idleTimeout?: number;
     auth?: {
       apiKeys?: Array<{
         key: string;

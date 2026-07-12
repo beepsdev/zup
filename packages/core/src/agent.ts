@@ -177,6 +177,7 @@ export async function createAgent(options: AgentOptions = {}) {
       hostname?: string;
       apiKeys?: string[];
       allowUnauthenticated?: boolean;
+      idleTimeout?: number;
     }): ApiServer {
       const apiConfig = {
         port: options?.port || context.options.api?.port || 3000,
@@ -187,6 +188,7 @@ export async function createAgent(options: AgentOptions = {}) {
           options?.allowUnauthenticated ??
           context.options.api?.auth?.allowUnauthenticated ??
           false,
+        idleTimeout: options?.idleTimeout ?? context.options.api?.idleTimeout,
       };
 
       const server = createApiServer(context, apiConfig);
