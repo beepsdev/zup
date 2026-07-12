@@ -7,7 +7,7 @@
 import type { ZupAgent } from '../agent';
 import type { RouteHandler } from './types';
 import { json, error, parseBody } from './helpers';
-import { getApprovalQueue, resolveApproval, purgeExpiredApprovals, enqueueApproval, DEFAULT_APPROVAL_TTL_MS } from '../utils/approvals';
+import { getApprovalQueue, resolveApproval, purgeExpiredApprovals, enqueueApproval, DEFAULT_APPROVAL_TTL_MS, DEFAULT_APPROVAL_HISTORY_LIMIT } from '../utils/approvals';
 
 /**
  * Register core API routes
@@ -123,8 +123,9 @@ export function registerCoreRoutes(
     const approvalConfig = ctx.context.options.approvals;
     const autoExpire = approvalConfig?.autoExpire ?? true;
     const ttlMs = approvalConfig?.ttlMs ?? DEFAULT_APPROVAL_TTL_MS;
+    const maxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
     if (autoExpire) {
-      purgeExpiredApprovals(ctx.context.state, ttlMs);
+      purgeExpiredApprovals(ctx.context.state, ttlMs, Date.now(), maxHistory);
     }
     const queue = getApprovalQueue(ctx.context.state);
 
@@ -146,8 +147,9 @@ export function registerCoreRoutes(
     const approvalConfig = ctx.context.options.approvals;
     const autoExpire = approvalConfig?.autoExpire ?? true;
     const ttlMs = approvalConfig?.ttlMs ?? DEFAULT_APPROVAL_TTL_MS;
+    const maxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
     if (autoExpire) {
-      purgeExpiredApprovals(ctx.context.state, ttlMs);
+      purgeExpiredApprovals(ctx.context.state, ttlMs, Date.now(), maxHistory);
     }
 
     const queue = getApprovalQueue(ctx.context.state);
@@ -169,7 +171,7 @@ export function registerCoreRoutes(
       result,
       note,
       actedBy,
-    });
+    }, maxHistory);
 
     if (!resolved) {
       return error('Approval could not be resolved', 500);
@@ -190,8 +192,9 @@ export function registerCoreRoutes(
     const approvalConfig = ctx.context.options.approvals;
     const autoExpire = approvalConfig?.autoExpire ?? true;
     const ttlMs = approvalConfig?.ttlMs ?? DEFAULT_APPROVAL_TTL_MS;
+    const maxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
     if (autoExpire) {
-      purgeExpiredApprovals(ctx.context.state, ttlMs);
+      purgeExpiredApprovals(ctx.context.state, ttlMs, Date.now(), maxHistory);
     }
 
     const queue = getApprovalQueue(ctx.context.state);
@@ -211,7 +214,7 @@ export function registerCoreRoutes(
     const resolved = resolveApproval(ctx.context.state, approvalId, 'denied', {
       note,
       actedBy,
-    });
+    }, maxHistory);
 
     if (!resolved) {
       return error('Approval could not be resolved', 500);
@@ -248,9 +251,10 @@ export function registerCoreRoutes(
     const approvalConfig = ctx.context.options.approvals;
     const autoExpire = approvalConfig?.autoExpire ?? true;
     const ttlMs = approvalConfig?.ttlMs ?? DEFAULT_APPROVAL_TTL_MS;
+    const maxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
 
     if (autoExpire) {
-      purgeExpiredApprovals(ctx.context.state, ttlMs);
+      purgeExpiredApprovals(ctx.context.state, ttlMs, Date.now(), maxHistory);
     }
 
     const requiresQueue =

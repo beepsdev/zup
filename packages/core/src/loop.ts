@@ -8,7 +8,12 @@ import type {
   ZupPlugin,
 } from './types/index';
 import { executePluginHooks } from './plugin';
-import { enqueueApproval, purgeExpiredApprovals, DEFAULT_APPROVAL_TTL_MS } from './utils/approvals';
+import {
+  enqueueApproval,
+  purgeExpiredApprovals,
+  DEFAULT_APPROVAL_TTL_MS,
+  DEFAULT_APPROVAL_HISTORY_LIMIT,
+} from './utils/approvals';
 import { listRuns, updateRunStatus, runToObservation, buildRunResult, sendCallback } from './runs';
 
 function isObserveHookResult(x: unknown): x is { observations?: Observation[] } {
@@ -38,8 +43,9 @@ export async function runOODALoop(
     const approvalConfig = ctx.options.approvals;
     const autoExpire = approvalConfig?.autoExpire ?? true;
     const ttlMs = approvalConfig?.ttlMs ?? DEFAULT_APPROVAL_TTL_MS;
+    const maxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
     if (autoExpire) {
-      purgeExpiredApprovals(ctx.state, ttlMs);
+      purgeExpiredApprovals(ctx.state, ttlMs, Date.now(), maxHistory);
     }
 
     await executePluginHooks(plugins, 'onLoopStart', ctx);

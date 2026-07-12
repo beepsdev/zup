@@ -40,7 +40,23 @@ export type ApprovalQueue = {
 
 export const DEFAULT_APPROVAL_TTL_MS = 60 * 60_000;
 
+export const DEFAULT_APPROVAL_HISTORY_LIMIT = 500;
+
 const APPROVAL_STATE_KEY = 'approvals';
+
+/**
+ * Trim queue.history in place from the front so it holds at most maxHistory
+ * items (the most recent entries are retained).
+ */
+function trimApprovalHistory(queue: ApprovalQueue, maxHistory: number): void {
+  if (maxHistory < 0 || !Number.isFinite(maxHistory)) {
+    return;
+  }
+  const overflow = queue.history.length - maxHistory;
+  if (overflow > 0) {
+    queue.history.splice(0, overflow);
+  }
+}
 
 function isApprovalQueue(value: unknown): value is ApprovalQueue {
   if (!value || typeof value !== 'object') return false;
@@ -89,7 +105,8 @@ export function resolveApproval(
   state: StateStore,
   id: string,
   status: Exclude<ApprovalStatus, 'pending'>,
-  updates: Partial<Pick<ApprovalItem, 'result' | 'note' | 'actedBy'>> = {}
+  updates: Partial<Pick<ApprovalItem, 'result' | 'note' | 'actedBy'>> = {},
+  maxHistory: number = DEFAULT_APPROVAL_HISTORY_LIMIT
 ): ApprovalItem | undefined {
   const queue = getApprovalQueue(state);
   const index = queue.pending.findIndex(item => item.id === id);
@@ -108,6 +125,7 @@ export function resolveApproval(
 
   queue.pending.splice(index, 1);
   queue.history.push(resolved);
+  trimApprovalHistory(queue, maxHistory);
   state.set(APPROVAL_STATE_KEY, queue);
   return resolved;
 }
@@ -115,7 +133,8 @@ export function resolveApproval(
 export function purgeExpiredApprovals(
   state: StateStore,
   ttlMs?: number,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  maxHistory: number = DEFAULT_APPROVAL_HISTORY_LIMIT
 ): ApprovalItem[] {
   if (!ttlMs || ttlMs <= 0) {
     return [];
@@ -146,6 +165,7 @@ export function purgeExpiredApprovals(
   }
 
   if (expired.length > 0) {
+    trimApprovalHistory(queue, maxHistory);
     state.set(APPROVAL_STATE_KEY, queue);
   }
   return expired;
