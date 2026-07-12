@@ -11,6 +11,9 @@ import { executePluginHooks } from './plugin';
 import { enqueueApproval, purgeExpiredApprovals, DEFAULT_APPROVAL_TTL_MS } from './utils/approvals';
 import { listRuns, updateRunStatus, runToObservation, buildRunResult, sendCallback } from './runs';
 
+/** Default maximum number of loop results retained in ctx.history. */
+export const DEFAULT_MAX_HISTORY = 500;
+
 function isObserveHookResult(x: unknown): x is { observations?: Observation[] } {
   return !!x && typeof x === 'object' && 'observations' in x;
 }
@@ -84,6 +87,13 @@ export async function runOODALoop(
 
     await executePluginHooks(plugins, 'onLoopComplete', loopResult, ctx);
     ctx.history.push(loopResult);
+
+    // Trim history in place from the front so it never exceeds maxHistory.
+    // Do not reassign ctx.history — other code holds references to the array.
+    const maxHistory = ctx.options.maxHistory ?? DEFAULT_MAX_HISTORY;
+    if (ctx.history.length > maxHistory) {
+      ctx.history.splice(0, ctx.history.length - maxHistory);
+    }
 
     return loopResult;
   } catch (err) {

@@ -206,6 +206,51 @@ describe('Zup Agent', () => {
     expect(agent.getHistory().length).toBe(2);
   });
 
+  test('should cap loop history at maxHistory', async () => {
+    let iteration = 0;
+
+    const testPlugin = definePlugin({
+      id: 'test',
+      observers: {
+        iterationObserver: createObserver({
+          name: 'iteration-observer',
+          description: 'Tags each loop with its iteration number',
+          observe: async () => {
+            iteration += 1;
+            const obs: Observation = {
+              source: 'test/iteration',
+              timestamp: new Date(),
+              type: 'state',
+              severity: 'info',
+              data: { iteration },
+            };
+            return [obs];
+          },
+        }),
+      },
+    });
+
+    const agent = await createAgent({
+      plugins: [testPlugin],
+      maxHistory: 3,
+    });
+
+    const history = agent.getHistory();
+
+    for (let i = 0; i < 7; i++) {
+      await agent.runLoop();
+    }
+
+    expect(history.length).toBe(3);
+
+    // History should contain the most recent results (iterations 5, 6, 7)
+    const iterations = history.map(r => r.observations[0]?.data.iteration);
+    expect(iterations).toEqual([5, 6, 7]);
+
+    // getHistory() still returns the same (in-place trimmed) array
+    expect(agent.getHistory()).toBe(history);
+  });
+
   test('should manage state', async () => {
     const agent = await createAgent();
     const state = agent.getState();
