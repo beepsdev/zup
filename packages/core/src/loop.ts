@@ -14,7 +14,7 @@ import {
   DEFAULT_APPROVAL_TTL_MS,
   DEFAULT_APPROVAL_HISTORY_LIMIT,
 } from './utils/approvals';
-import { listRuns, updateRunStatus, runToObservation, buildRunResult, sendCallback } from './runs';
+import { listRuns, updateRunStatus, runToObservation, buildRunResult, sendCallback, pruneRuns } from './runs';
 
 /** Default maximum number of loop results retained in ctx.history. */
 export const DEFAULT_MAX_HISTORY = 500;
@@ -50,6 +50,8 @@ export async function runOODALoop(
     if (autoExpire) {
       purgeExpiredApprovals(ctx.state, ttlMs, Date.now(), approvalMaxHistory);
     }
+
+    pruneRuns(ctx, ctx.options.runs);
 
     await executePluginHooks(plugins, 'onLoopStart', ctx);
 

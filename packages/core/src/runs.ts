@@ -12,6 +12,18 @@ import type { Run, RunStatus, CreateRunInput, RunResult } from './types/run';
 const RUN_PREFIX = 'run:';
 const RUN_INDEX_KEY = 'run:index';
 
+/** How long finished runs are retained before pruning (default: 24 hours). */
+export const DEFAULT_RUN_RETENTION_MS = 24 * 60 * 60 * 1000;
+/** Maximum number of finished runs retained regardless of age (default: 500). */
+export const DEFAULT_MAX_FINISHED_RUNS = 500;
+
+/** Statuses that mark a run as finished (eligible for pruning). */
+const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set([
+  'completed',
+  'failed',
+  'cancelled',
+]);
+
 function getRunIndex(ctx: AgentContext): string[] {
   const stored = ctx.state.get(RUN_INDEX_KEY);
   if (Array.isArray(stored)) {
@@ -110,6 +122,64 @@ export function updateRunStatus(
   ctx.state.set(`${RUN_PREFIX}${runId}`, run);
   ctx.logger.info(`Run ${runId} updated to ${status}`);
   return run;
+}
+
+/**
+ * Prune finished runs from the state store.
+ *
+ * Removes runs in a terminal status (completed/failed/cancelled) that finished
+ * longer than `retentionMs` ago, judged by `completedAt` (falling back to
+ * `updatedAt`). Also enforces `maxFinished`: if more finished runs remain,
+ * only the newest are kept. Pending/investigating runs are never pruned.
+ *
+ * Returns the number of index entries removed.
+ */
+export function pruneRuns(
+  ctx: AgentContext,
+  opts?: { retentionMs?: number; maxFinished?: number }
+): number {
+  const retentionMs = opts?.retentionMs ?? DEFAULT_RUN_RETENTION_MS;
+  const maxFinished = opts?.maxFinished ?? DEFAULT_MAX_FINISHED_RUNS;
+  const now = Date.now();
+
+  const index = getRunIndex(ctx);
+  const toDelete = new Set<string>();
+  const retainedFinished: Array<{ id: string; finishedAt: number }> = [];
+
+  for (const id of index) {
+    const run = getRun(ctx, id);
+    if (!run) {
+      // Ghost index entry with no backing state — clean it up.
+      toDelete.add(id);
+      continue;
+    }
+    if (!TERMINAL_STATUSES.has(run.status)) continue;
+
+    const finishedAt = new Date(run.completedAt ?? run.updatedAt).getTime();
+    if (now - finishedAt > retentionMs) {
+      toDelete.add(id);
+    } else {
+      retainedFinished.push({ id, finishedAt });
+    }
+  }
+
+  // Enforce the max-finished cap, keeping the newest finished runs.
+  if (retainedFinished.length > maxFinished) {
+    retainedFinished.sort((a, b) => b.finishedAt - a.finishedAt);
+    for (const { id } of retainedFinished.slice(maxFinished)) {
+      toDelete.add(id);
+    }
+  }
+
+  if (toDelete.size === 0) return 0;
+
+  for (const id of toDelete) {
+    ctx.state.delete(`${RUN_PREFIX}${id}`);
+  }
+  setRunIndex(ctx, index.filter(id => !toDelete.has(id)));
+
+  ctx.logger.info(`Pruned ${toDelete.size} finished run(s)`);
+  return toDelete.size;
 }
 
 export function runToObservation(run: Run): Observation {
