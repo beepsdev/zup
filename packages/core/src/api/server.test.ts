@@ -11,7 +11,7 @@ import type { Observation } from '../types/index';
 describe('API Server', () => {
   let agent: Awaited<ReturnType<typeof createAgent>>;
   let server: ReturnType<typeof agent.startApi>;
-  const baseUrl = 'http://localhost:3001/api/v0';
+  let baseUrl: string;
   const apiKey = 'test-key-123';
 
   beforeAll(async () => {
@@ -72,10 +72,15 @@ describe('API Server', () => {
       plugins: [testPlugin],
     });
 
+    // Port 0 lets the OS pick a free port so tests don't collide with
+    // whatever else is running on the machine; 127.0.0.1 avoids the
+    // localhost -> ::1 resolution hitting an unrelated IPv6 listener.
     server = agent.startApi({
-      port: 3001,
+      port: 0,
+      hostname: '127.0.0.1',
       apiKeys: [apiKey],
     });
+    baseUrl = `http://127.0.0.1:${server.server.port}/api/v0`;
   });
 
   afterAll(() => {
