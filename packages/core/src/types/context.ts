@@ -71,6 +71,8 @@ export type AgentOptions = {
     autoExpire?: boolean;
     /** Expiration TTL in milliseconds (default: 3600000) */
     ttlMs?: number;
+    /** Maximum number of resolved/expired items kept in history (default: 500) */
+    maxHistory?: number;
   };
 
   // Plugins
