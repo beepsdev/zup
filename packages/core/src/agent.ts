@@ -107,6 +107,8 @@ export async function createAgent(options: AgentOptions = {}) {
   }
 
   let loopPromise: Promise<LoopResult> | null = null;
+  let loopTimer: ReturnType<typeof setInterval> | null = null;
+  const apiServers: ApiServer[] = [];
 
   return {
     getContext(): AgentContext {
@@ -139,7 +141,7 @@ export async function createAgent(options: AgentOptions = {}) {
         context.logger.info(`Starting Zup in continuous mode (interval: ${interval}ms)`);
 
         // Run continuously
-        const timer = setInterval(async () => {
+        loopTimer = setInterval(async () => {
           try {
             await this.runLoop();
           } catch (error) {
@@ -147,12 +149,43 @@ export async function createAgent(options: AgentOptions = {}) {
           }
         }, interval);
 
-        return () => clearInterval(timer);
+        return () => {
+          if (loopTimer) {
+            clearInterval(loopTimer);
+            loopTimer = null;
+          }
+        };
       } else if (mode === 'event-driven') {
         context.logger.info('Starting Zup in event-driven mode');
       } else {
         context.logger.info('Zup ready in manual mode. Call runLoop() to execute.');
       }
+    },
+
+    /**
+     * Gracefully stop the agent: clears the continuous-mode timer, waits for
+     * any in-flight loop to finish, stops all started API servers, and
+     * flushes pending state to persistence. Safe to call multiple times.
+     */
+    async stop(): Promise<void> {
+      if (loopTimer) {
+        clearInterval(loopTimer);
+        loopTimer = null;
+      }
+
+      if (loopPromise) {
+        try {
+          await loopPromise;
+        } catch {
+          // Loop errors are already handled/logged by the loop itself.
+        }
+      }
+
+      for (const server of apiServers.splice(0)) {
+        server.stop();
+      }
+
+      await context.state.flush?.();
     },
 
     getCapabilities() {
@@ -207,6 +240,8 @@ export async function createAgent(options: AgentOptions = {}) {
           }
         }
       }
+
+      apiServers.push(server);
 
       return server;
     },

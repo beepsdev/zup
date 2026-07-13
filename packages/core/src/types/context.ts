@@ -17,6 +17,8 @@ export type StateStore = {
   set: (key: string, value: unknown) => void;
   delete: (key: string) => void;
   has: (key: string) => boolean;
+  /** Flush pending changes to persistence immediately. No-op when persistence is disabled. */
+  flush?: () => Promise<void>;
 };
 
 export type LoopResult = {

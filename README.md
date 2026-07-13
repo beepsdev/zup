@@ -51,6 +51,9 @@ const result = await agent.runLoop();
 
 // Or run continuously (uses mode/loopInterval from createAgent)
 await agent.start();
+
+// Graceful shutdown: stops the loop, API servers, and flushes state
+await agent.stop();
 ```
 
 ## Core Concepts

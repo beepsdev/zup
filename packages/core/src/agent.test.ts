@@ -3,9 +3,14 @@
  */
 
 import { describe, test, expect } from 'bun:test';
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { createAgent } from './agent';
 import { definePlugin, createObserver, createAction } from './plugin';
 import type { Observation } from './types/index';
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe('Zup Agent', () => {
   test('should create agent with default options', async () => {
@@ -261,5 +266,66 @@ describe('Zup Agent', () => {
 
     state.delete('key1');
     expect(state.has('key1')).toBe(false);
+  });
+
+  test('stop() clears the continuous-mode timer', async () => {
+    const agent = await createAgent({
+      mode: 'continuous',
+      loopInterval: 10,
+      logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+    });
+
+    await agent.start();
+    await sleep(60);
+    await agent.stop();
+
+    const iterationsAtStop = agent.getContext().loop.iteration;
+    expect(iterationsAtStop).toBeGreaterThan(0);
+
+    await sleep(60);
+    expect(agent.getContext().loop.iteration).toBe(iterationsAtStop);
+  });
+
+  test('stop() is idempotent', async () => {
+    const agent = await createAgent({
+      mode: 'continuous',
+      loopInterval: 10,
+      logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+    });
+
+    await agent.start();
+    await agent.stop();
+    await agent.stop();
+
+    // Also safe on an agent that was never started
+    const manualAgent = await createAgent();
+    await manualAgent.stop();
+    await manualAgent.stop();
+  });
+
+  test('stop() flushes persisted state without waiting for the debounce', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'zup-state-'));
+    const statePath = join(dir, 'zup.state.json');
+
+    try {
+      const agent = await createAgent({
+        statePersistence: {
+          enabled: true,
+          type: 'file',
+          config: { path: statePath }, // default 1s debounce
+        },
+        logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+      });
+
+      agent.getState().set('approval', 'pending');
+      await agent.stop();
+
+      const persisted = JSON.parse(await Bun.file(statePath).text()) as {
+        entries: Array<[string, unknown]>;
+      };
+      expect(new Map(persisted.entries).get('approval')).toBe('pending');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
