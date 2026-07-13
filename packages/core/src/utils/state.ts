@@ -140,6 +140,7 @@ export function createStateStore(options: StateStoreOptions = {}): StateStore {
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
   let writeInFlight = false;
   let needsFlush = false;
+  let activeWrite: Promise<void> | null = null;
   const pendingDbOps = new Map<string, { op: 'set' | 'delete'; value?: unknown }>();
 
   const flush = async () => {
@@ -151,6 +152,17 @@ export function createStateStore(options: StateStoreOptions = {}): StateStore {
     }
 
     writeInFlight = true;
+    const write = performWrite();
+    const tracked: Promise<void> = write.finally(() => {
+      if (activeWrite === tracked) {
+        activeWrite = null;
+      }
+    });
+    activeWrite = tracked;
+    await write;
+  };
+
+  async function performWrite(): Promise<void> {
     if (persistenceType === 'file' && filePath) {
       const snapshot = new Map(store);
       dirty = false;
@@ -211,7 +223,7 @@ export function createStateStore(options: StateStoreOptions = {}): StateStore {
     }
 
     writeInFlight = false;
-  };
+  }
 
   const scheduleFlush = () => {
     if (!persistenceEnabled) return;
@@ -257,6 +269,26 @@ export function createStateStore(options: StateStoreOptions = {}): StateStore {
 
     has(key: string) {
       return store.has(key);
+    },
+
+    async flush() {
+      if (!persistenceEnabled) return;
+
+      // Cancel any pending debounce timer; we're flushing now.
+      if (flushTimer) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+      }
+
+      // Wait until the store is actually clean, including any in-flight
+      // write and queued follow-up flushes.
+      while (writeInFlight || dirty || pendingDbOps.size > 0) {
+        if (activeWrite) {
+          await activeWrite;
+        } else {
+          await flush();
+        }
+      }
     },
   };
 }
