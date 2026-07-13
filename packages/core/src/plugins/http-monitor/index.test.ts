@@ -352,6 +352,7 @@ describe('HTTP Monitor Plugin', () => {
   describe('Plugin Endpoints', () => {
     let agent: Awaited<ReturnType<typeof createAgent>>;
     let apiServer: ReturnType<typeof agent.startApi>;
+    let apiBaseUrl: string;
     const apiKey = 'test-key-123';
 
     beforeAll(async () => {
@@ -369,11 +370,15 @@ describe('HTTP Monitor Plugin', () => {
         ],
       });
 
+      // Port 0 lets the OS pick a free port so tests don't collide with
+      // whatever else is running on the machine; 127.0.0.1 avoids the
+      // localhost -> ::1 resolution hitting an unrelated IPv6 listener.
       apiServer = agent.startApi({
-        port: 3002,
-        hostname: 'localhost',
+        port: 0,
+        hostname: '127.0.0.1',
         apiKeys: [apiKey],
       });
+      apiBaseUrl = `http://127.0.0.1:${apiServer.server.port}/api/v0`;
 
       // Wait for server to start
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -384,7 +389,7 @@ describe('HTTP Monitor Plugin', () => {
     });
 
     test('GET /http-monitor/endpoints - should list endpoints', async () => {
-      const response = await fetch('http://localhost:3002/api/v0/http-monitor/endpoints', {
+      const response = await fetch(`${apiBaseUrl}/http-monitor/endpoints`, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
         },
@@ -397,7 +402,7 @@ describe('HTTP Monitor Plugin', () => {
     });
 
     test('POST /http-monitor/endpoints/:id/check - should check endpoint', async () => {
-      const response = await fetch('http://localhost:3002/api/v0/http-monitor/endpoints/test/check', {
+      const response = await fetch(`${apiBaseUrl}/http-monitor/endpoints/test/check`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${apiKey}`,

@@ -179,7 +179,8 @@ export async function createAgent(options: AgentOptions = {}) {
       allowUnauthenticated?: boolean;
     }): ApiServer {
       const apiConfig = {
-        port: options?.port || context.options.api?.port || 3000,
+        // ?? not ||: port 0 is a valid request for an OS-assigned port
+        port: options?.port ?? context.options.api?.port ?? 3000,
         hostname: options?.hostname || context.options.api?.host || 'localhost',
         basePath: '/api/v0',
         apiKeys: options?.apiKeys || context.options.api?.auth?.apiKeys?.map(k => k.key) || [],

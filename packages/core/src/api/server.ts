@@ -159,7 +159,7 @@ export function createApiServer(
     context.logger.warn('API auth is required but no API keys are configured; auth-required routes will return 401');
   }
 
-  context.logger.info(`API server listening on http://${hostname}:${port}${basePath}`);
+  context.logger.info(`API server listening on http://${hostname}:${server.port}${basePath}`);
 
   return {
     server,
