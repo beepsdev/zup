@@ -24,6 +24,22 @@ export function registerCoreRoutes(
     const triggerContext = body && typeof body === 'object' && 'context' in body && typeof body.context === 'string'
       ? body.context
       : undefined;
+    const isAsync = body !== null && typeof body === 'object' && 'async' in body && body.async === true;
+
+    if (isAsync) {
+      // Fire-and-forget: runLoop() is single-flight, so concurrent triggers
+      // share the in-flight loop rather than starting duplicates.
+      agent.runLoop().catch((err: unknown) => {
+        ctx.context.logger.error('Async loop trigger failed:', err);
+      });
+
+      return json({
+        success: true,
+        status: 'triggered',
+        message: 'OODA loop started. Poll GET /api/v0/loop/status for progress.',
+        context: triggerContext,
+      }, 202);
+    }
 
     try {
       const result = await agent.runLoop();

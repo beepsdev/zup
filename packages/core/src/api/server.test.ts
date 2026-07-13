@@ -174,6 +174,29 @@ describe('API Server', () => {
       expect(data.result.observations).toBeGreaterThan(0);
     });
 
+    test('POST /loop/trigger with async: true - should return 202 immediately and run loop', async () => {
+      const loopsBefore = agent.getHistory().length;
+
+      const response = await fetch(`${baseUrl}/loop/trigger`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ async: true, context: 'async test run' }),
+      });
+      expect(response.status).toBe(202);
+
+      const data = await response.json() as { success: boolean; status: string; message: string };
+      expect(data.success).toBe(true);
+      expect(data.status).toBe('triggered');
+      expect(data.message).toContain('/loop/status');
+
+      // Poll until the loop completes (history grows)
+      const deadline = Date.now() + 5000;
+      while (agent.getHistory().length <= loopsBefore && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      expect(agent.getHistory().length).toBeGreaterThan(loopsBefore);
+    });
+
     test('GET /observations - should return observations', async () => {
       // First trigger a loop to generate observations
       await fetch(`${baseUrl}/loop/trigger`, {

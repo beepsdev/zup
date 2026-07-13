@@ -8,6 +8,13 @@ import type { AgentContext } from '../types/context';
 import type { Route, ApiServer, ApiServerOptions, RouteHandler, RequestContext } from './types';
 
 /**
+ * Default idle timeout (seconds) for API connections.
+ * Bun's default is 10s, which drops clients during long-running requests
+ * such as synchronous loop triggers that involve LLM calls.
+ */
+const DEFAULT_IDLE_TIMEOUT_SECONDS = 240;
+
+/**
  * Simple path matcher
  */
 function matchPath(pattern: string, path: string): Record<string, string> | null {
@@ -49,6 +56,7 @@ export function createApiServer(
     basePath = '/api/v0',
     apiKeys = [],
     allowUnauthenticated = false,
+    idleTimeout = DEFAULT_IDLE_TIMEOUT_SECONDS,
   } = options;
 
   const apiKeySet = new Set(apiKeys);
@@ -152,6 +160,7 @@ export function createApiServer(
   const server = Bun.serve({
     port,
     hostname,
+    idleTimeout,
     fetch: handleRequest,
   });
 

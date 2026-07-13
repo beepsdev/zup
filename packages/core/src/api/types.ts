@@ -46,4 +46,10 @@ export type ApiServerOptions = {
   basePath?: string;
   apiKeys?: string[];
   allowUnauthenticated?: boolean;
+  /**
+   * Maximum seconds a connection may sit idle before Bun closes it.
+   * Bun's default is 10s, which is too short for long-running requests
+   * like synchronous loop triggers. Maximum allowed value is 255.
+   */
+  idleTimeout?: number;
 };

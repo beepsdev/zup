@@ -177,6 +177,7 @@ export async function createAgent(options: AgentOptions = {}) {
       hostname?: string;
       apiKeys?: string[];
       allowUnauthenticated?: boolean;
+      idleTimeout?: number;
     }): ApiServer {
       const apiConfig = {
         // ?? not ||: port 0 is a valid request for an OS-assigned port
@@ -188,6 +189,7 @@ export async function createAgent(options: AgentOptions = {}) {
           options?.allowUnauthenticated ??
           context.options.api?.auth?.allowUnauthenticated ??
           false,
+        idleTimeout: options?.idleTimeout ?? context.options.api?.idleTimeout,
       };
 
       const server = createApiServer(context, apiConfig);
