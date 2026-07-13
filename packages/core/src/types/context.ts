@@ -45,6 +45,13 @@ export type AgentOptions = {
   // Loop configuration
   mode?: 'manual' | 'continuous' | 'event-driven';
   loopInterval?: number; // For continuous mode (ms)
+  /**
+   * Maximum number of loop results retained in memory (`ctx.history`).
+   * Older results are dropped from the front once the limit is exceeded,
+   * preventing unbounded memory growth in long-running agents.
+   * Defaults to 500.
+   */
+  maxHistory?: number;
 
   // API configuration
   api?: {
