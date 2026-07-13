@@ -46,9 +46,9 @@ export async function runOODALoop(
     const approvalConfig = ctx.options.approvals;
     const autoExpire = approvalConfig?.autoExpire ?? true;
     const ttlMs = approvalConfig?.ttlMs ?? DEFAULT_APPROVAL_TTL_MS;
-    const maxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
+    const approvalMaxHistory = approvalConfig?.maxHistory ?? DEFAULT_APPROVAL_HISTORY_LIMIT;
     if (autoExpire) {
-      purgeExpiredApprovals(ctx.state, ttlMs, Date.now(), maxHistory);
+      purgeExpiredApprovals(ctx.state, ttlMs, Date.now(), approvalMaxHistory);
     }
 
     await executePluginHooks(plugins, 'onLoopStart', ctx);
