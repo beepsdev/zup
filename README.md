@@ -179,6 +179,7 @@ Available plugins in this repo:
 - `github-activity` - Track commits and merged PRs (plus changed files) for correlation.
 - `kubernetes` - Monitor cluster health and (optionally) restart/scale/delete pods or fetch logs.
 - `historian` - Store successful incident resolutions in SQLite and retrieve similar incidents.
+- `scribe` - Write resolved incidents as markdown playbooks; matched incidents feed future investigations.
 - `investigation-orienter` - Run a tool-calling investigation loop during Orient on severe signals.
 - `example` (reference) - `packages/core/src/plugins/example.ts` demonstrates full plugin wiring.
 
@@ -299,6 +300,23 @@ historianPlugin({
 ```
 
 Requires SQLite configured on the agent. When sqlite-vec extension is available, uses vector search; otherwise falls back to keyword matching.
+
+### scribe
+
+File-based incident memory — the no-database alternative to `historian`. When the agent successfully resolves an incident, the scribe writes a markdown playbook (what happened, contributing factor, what fixed it, lesson learned) with trigger keywords generated at record time — by the LLM when one is configured. Recorded incidents flow through the normal playbook pipeline: when a future incident matches, they're injected into the investigation context.
+
+```typescript
+import { scribe } from 'zupdev/plugins/scribe';
+
+scribe({
+  dir: './playbooks/incidents', // where incident .md files live
+  minConfidence: 0.7,           // only record confident resolutions
+  includeHighRisk: false,       // skip high-risk resolutions
+  maxIncidents: 200,            // newest N files loaded at startup
+});
+```
+
+Because incidents are plain markdown, the agent's memory is auditable: commit the directory to git, review it in PRs, edit or delete entries the agent got wrong. No SQLite or embedding configuration required.
 
 ### kubernetes
 
