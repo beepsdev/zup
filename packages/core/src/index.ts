@@ -17,8 +17,6 @@ export { createStateStore } from './utils/state';
 
 export { createSQLiteCapability, type SQLiteConfig, type SQLiteCapability } from './db';
 
-export { createEmbeddingCapability, type EmbeddingConfig, type EmbeddingCapability } from './embedding';
-
 export { createApiServer } from './api/server';
 export { json, error, parseBody, responses } from './api/helpers';
 

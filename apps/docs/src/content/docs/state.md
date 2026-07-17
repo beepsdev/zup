@@ -198,6 +198,6 @@ The approval queue also uses the state store:
 |---|---|---|---|
 | `memory` | None | Fastest | Development, stateless deploys, short-lived agents |
 | `file` | Good | Fast reads, debounced writes | Single-instance production, simple deployments |
-| `database` | Best | Fast reads, batched writes | Production with SQLite already configured, shared state with historian |
+| `database` | Best | Fast reads, batched writes | Production deployments that already use SQLite |
 
-If you are already using SQLite for the historian plugin, `database` persistence makes sense -- it shares the same database file and avoids a separate state file.
+If your agent already has SQLite configured (for example, for custom plugin storage), `database` persistence makes sense -- it shares the same database file and avoids a separate state file.

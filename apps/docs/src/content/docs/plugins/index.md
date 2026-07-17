@@ -42,7 +42,7 @@ import { githubActivity } from 'zupdev/plugins/github-activity';
 | Plugin | What it does | Requires LLM? | Requires SQLite? |
 |---|---|---|---|
 | [http-monitor](/docs/plugins/http-monitor/) | Monitors HTTP endpoints for availability. Detects failures, analyzes patterns, restarts services via configurable strategies. | No | No |
-| [historian](/docs/plugins/historian/) | Stores incident resolutions in SQLite. Uses text search or sqlite-vec for RAG to recall similar past incidents during the orient phase. | No (embeddings optional) | Yes |
+| [historian](/docs/plugins/historian/) | Records successful incident resolutions as markdown playbooks and recalls similar past incidents during the orient phase via trigger-keyword matching. | No (used for incident narratives when available) | No |
 | [investigation-orienter](/docs/plugins/investigation-orienter/) | Runs a deep investigation sub-loop with LLM tool calling when observations exceed a severity threshold. | Yes | No |
 | [kubernetes](/docs/plugins/kubernetes/) | Observes Kubernetes cluster state (pods, deployments, nodes, events). Provides restart, scale, delete, and log retrieval actions. | No | No |
 | [cloud-run](/docs/plugins/cloud-run/) | Monitors Google Cloud Run services and revisions. Tracks rollouts and can shift traffic for auto-rollback. | No | No |

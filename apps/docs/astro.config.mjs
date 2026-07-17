@@ -55,7 +55,7 @@ export default defineConfig({
           label: 'Integrations',
           items: [
             { label: 'LLM Providers', link: '/integrations/llm/' },
-            { label: 'SQLite & Embeddings', link: '/integrations/sqlite/' },
+            { label: 'SQLite', link: '/integrations/sqlite/' },
           ],
         },
         {

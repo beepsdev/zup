@@ -53,7 +53,7 @@ The http-monitor plugin registers an observer, an orienter, a decision strategy,
 
 ## Add an LLM
 
-Plugins like the investigation-orienter and historian require an LLM for deeper analysis. Configure one under the `llm` key:
+Plugins like the investigation-orienter require an LLM for deeper analysis (others, like the historian, use one opportunistically when configured). Set it up under the `llm` key:
 
 ```ts
 const agent = await createAgent({
@@ -85,9 +85,9 @@ llm: {
 
 See [LLM Providers](/docs/integrations/llm/) for Google Gemini, Mistral, Groq, xAI, OpenRouter, Azure, Bedrock, Vertex AI, and others.
 
-## Add SQLite for persistence
+## Add incident memory
 
-The historian plugin stores incident history in SQLite and uses it for RAG during future loops:
+The historian plugin records successful incident resolutions as plain markdown playbooks (in `./playbooks/incidents/` by default) and recalls similar past incidents on future loops. No database required -- the files are human-readable, so you can commit them to git, review them in PRs, and edit or delete entries the agent got wrong:
 
 ```ts
 import { createAgent } from 'zupdev';
@@ -101,7 +101,6 @@ const agent = await createAgent({
     apiKey: process.env.ANTHROPIC_API_KEY!,
     model: 'claude-sonnet-4-6',
   },
-  sqlite: { path: './zup.db' },
   plugins: [
     httpMonitor({
       endpoints: [

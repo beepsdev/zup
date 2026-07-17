@@ -1,431 +1,364 @@
 /**
  * Historian Plugin
  *
- * Stores incident resolutions when Zup confidently decides what to do,
- * and uses sqlite-vec for RAG during the orient/decide phases to help
- * detect patterns and recall how similar incidents were solved.
+ * File-based incident memory. When the agent successfully resolves an
+ * incident, the historian writes a markdown playbook describing what
+ * happened, what caused it, and what fixed it — into a directory of plain
+ * .md files that humans can read, edit, delete, and commit to git.
+ *
+ * Recorded incidents flow through the existing playbook pipeline: on later
+ * loops, files whose trigger keywords/sources match the current observations
+ * are injected into LLM context (e.g. by the investigation-orienter). The
+ * bundled historicalContext orienter also surfaces matching incidents as
+ * findings, so retrieval works without any other plugin installed.
+ *
+ * No SQLite, no embeddings — matching relies on generous trigger keywords
+ * generated at write time (by the LLM when available).
  */
 
-import {
-  definePlugin,
-  createOrienter,
-  type AgentContext,
-  type Observation,
-  type SituationAssessment,
-  type LoopResult,
-  type SQLiteCapability,
-} from '../../index';
-import { createEmbeddingCapability, type EmbeddingCapability, type EmbeddingConfig } from '../../embedding';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { z } from 'zod';
+import { definePlugin, createOrienter } from '../../plugin';
+import { parsePlaybook, loadPlaybooksFromDir, matchPlaybooks } from '../../playbook';
+import type { Playbook } from '../../playbook';
+import type {
+  AgentContext,
+  LoopResult,
+  Observation,
+  SituationAssessment,
+} from '../../types/index';
+import type { HistorianOptions, IncidentNarrative, IncidentRecord } from './types';
 
-export type HistorianPluginOptions = {
-  minConfidence?: number;
-  includeHighRisk?: boolean;
-  maxSimilarIncidents?: number;
-  embedding?: EmbeddingConfig;
-};
+const DEFAULT_DIR = './playbooks/incidents';
+const DEFAULT_MIN_CONFIDENCE = 0.7;
+const DEFAULT_MAX_INCIDENTS = 200;
+const DEFAULT_MAX_SIMILAR = 5;
+const MAX_KEYWORDS = 15;
+/** Curated runbooks (default priority 0) outrank auto-recorded incidents. */
+const INCIDENT_PRIORITY = -10;
 
-export type StoredIncident = {
-  id: number;
-  created_at: string;
-  agent_id: string;
-  loop_iteration: number;
-  incident_summary: string;
-  contributing_factor: string | null;
-  resolution_summary: string;
-  decision_confidence: number;
-  decision_risk: string;
-  action_success: boolean;
-  observations_json: string;
-  situation_json: string;
-  decision_json: string;
-  action_results_json: string;
-};
+const NarrativeSchema = z.object({
+  description: z.string(),
+  keywords: z.array(z.string()).min(3).max(MAX_KEYWORDS),
+  lesson: z.string(),
+});
 
-export type RetrievedIncident = StoredIncident & {
-  similarity: number;
-};
-
-const INCIDENTS_TABLE = 'incidents';
-const EMBEDDINGS_TABLE = 'incident_embeddings';
-
-function generateIncidentSummary(loopResult: LoopResult): string {
-  const parts: string[] = [];
-
-  if (loopResult.situation?.summary) {
-    parts.push(`Situation: ${loopResult.situation.summary}`);
-  }
-
-  if (loopResult.decision?.rationale) {
-    parts.push(`Decision: ${loopResult.decision.rationale}`);
-  }
-
-  const successfulActions = loopResult.actionResults.filter(r => r.success);
-  if (successfulActions.length > 0) {
-    const actionSummary = successfulActions
-      .map(r => r.output || r.action)
-      .join('; ');
-    parts.push(`Resolution: ${actionSummary}`);
-  }
-
-  return parts.join(' | ');
-}
-
-function extractContributingFactor(loopResult: LoopResult): string | null {
-  if (!loopResult.situation?.assessments) {
-    return null;
-  }
-
-  // Extract contributing factor from assessments
-  for (const assessment of loopResult.situation.assessments) {
-    if (assessment.contributingFactor) {
-      return assessment.contributingFactor;
-    }
-  }
-
-  return null;
-}
-
-function generateResolutionSummary(loopResult: LoopResult): string {
-  const parts: string[] = [];
-
-  if (loopResult.decision) {
-    parts.push(`Action: ${loopResult.decision.action}`);
-    if (loopResult.decision.rationale) {
-      parts.push(`Rationale: ${loopResult.decision.rationale}`);
-    }
-  }
-
-  const successfulActions = loopResult.actionResults.filter(r => r.success);
-  if (successfulActions.length > 0) {
-    for (const result of successfulActions) {
-      if (result.output) {
-        parts.push(`Output: ${result.output}`);
-      }
-    }
-  }
-
-  return parts.join(' | ');
-}
-
-export const historianPlugin = (options: HistorianPluginOptions = {}) => {
-  const minConfidence = options.minConfidence ?? 0.75;
+export const historianPlugin = (options: HistorianOptions = {}) => {
+  const dir = options.dir ?? DEFAULT_DIR;
+  const minConfidence = options.minConfidence ?? DEFAULT_MIN_CONFIDENCE;
   const includeHighRisk = options.includeHighRisk ?? false;
-  const maxSimilarIncidents = options.maxSimilarIncidents ?? 5;
+  const useLLM = options.useLLM ?? true;
+  const maxIncidents = options.maxIncidents ?? DEFAULT_MAX_INCIDENTS;
+  const maxSimilarIncidents = options.maxSimilarIncidents ?? DEFAULT_MAX_SIMILAR;
 
-  let embedding: EmbeddingCapability | undefined;
-  let sqlite: SQLiteCapability | undefined;
-
-  return definePlugin({
+  const plugin = definePlugin({
     id: 'historian',
 
     init: async (ctx: AgentContext) => {
-      ctx.logger.info('[historian] Initializing historian plugin');
+      await mkdir(dir, { recursive: true });
 
-      if (!ctx.sqlite) {
-        ctx.logger.warn('[historian] SQLite not configured, historian will be disabled');
-        return;
+      const loaded = await loadPlaybooksFromDir(dir, ctx.logger);
+      // Filenames embed the incident timestamp, so sorting by sourcePath
+      // descending keeps the newest incidents when over the cap.
+      loaded.sort((a, b) => (b.sourcePath ?? '').localeCompare(a.sourcePath ?? ''));
+      const kept = loaded.slice(0, maxIncidents);
+      if (loaded.length > kept.length) {
+        ctx.logger.warn(
+          `[historian] ${loaded.length} incident files in ${dir}, loading newest ${kept.length} (maxIncidents)`
+        );
       }
 
-      sqlite = ctx.sqlite;
+      // Collected by the plugin-playbook mechanism after all inits run.
+      plugin.playbooks = kept;
 
-      ctx.sqlite.createTable('historian', INCIDENTS_TABLE, `
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        agent_id TEXT NOT NULL,
-        loop_iteration INTEGER NOT NULL,
-        incident_summary TEXT NOT NULL,
-        contributing_factor TEXT,
-        resolution_summary TEXT NOT NULL,
-        decision_confidence REAL NOT NULL,
-        decision_risk TEXT NOT NULL,
-        action_success INTEGER NOT NULL,
-        observations_json TEXT NOT NULL,
-        situation_json TEXT,
-        decision_json TEXT,
-        action_results_json TEXT NOT NULL
-      `);
-
-      if (ctx.sqlite.vecEnabled) {
-        const tableName = ctx.sqlite.getNamespacedTable('historian', EMBEDDINGS_TABLE);
-        try {
-          ctx.sqlite.db.exec(`
-            CREATE VIRTUAL TABLE IF NOT EXISTS ${tableName} USING vec0(
-              incident_id INTEGER PRIMARY KEY,
-              embedding float[1536]
-            )
-          `);
-          ctx.logger.info('[historian] Vector embeddings table created');
-        } catch (err) {
-          ctx.logger.warn('[historian] Failed to create vector table, RAG will use text search:', err);
-        }
-      }
-
-      if (options.embedding) {
-        try {
-          embedding = createEmbeddingCapability(options.embedding, ctx.logger);
-          ctx.logger.info('[historian] Embedding capability initialized');
-        } catch (err) {
-          ctx.logger.warn('[historian] Failed to initialize embedding capability:', err);
-        }
-      }
-
-      return {
-        context: {
-          historian: {
-            querySimilar: async (text: string, k: number = maxSimilarIncidents): Promise<RetrievedIncident[]> => {
-              return querySimilarIncidents(ctx, text, k);
-            },
-            getIncidentCount: (): number => {
-              return getIncidentCount(ctx);
-            },
-          },
-        },
-      };
+      ctx.logger.info(`[historian] Loaded ${kept.length} recorded incident(s) from ${dir}`);
     },
 
     orienters: {
       historicalContext: createOrienter({
         name: 'historical-context',
-        description: 'Enrich situation analysis with similar past incidents',
+        description: 'Surface similar past incidents as findings',
         orient: async (observations: Observation[], ctx: AgentContext): Promise<SituationAssessment> => {
-          if (!sqlite) {
-            return {
-              source: 'historian/no-db',
-              findings: ['Historian database not available'],
-              confidence: 0,
-            };
-          }
+          const incidents = ctx.playbooks.filter(isIncident);
 
-          const incidentCount = getIncidentCount(ctx);
-          if (incidentCount === 0) {
+          if (incidents.length === 0) {
             return {
               source: 'historian/no-history',
-              findings: ['No historical incidents recorded yet'],
+              findings: ['No past incidents on record'],
               confidence: 0,
             };
           }
 
-          const observationsSummary = observations
-            .map(obs => `[${obs.severity}] ${obs.source}: ${JSON.stringify(obs.data)}`)
-            .join('\n');
+          const matched = matchPlaybooks(incidents, observations, 'orient')
+            .slice(0, maxSimilarIncidents);
 
-          const similarIncidents = await querySimilarIncidents(ctx, observationsSummary, maxSimilarIncidents);
-
-          if (similarIncidents.length === 0) {
+          if (matched.length === 0) {
             return {
               source: 'historian/no-matches',
-              findings: ['No similar historical incidents found'],
+              findings: ['No similar past incidents found'],
               confidence: 0.3,
             };
           }
 
-          const findings: string[] = [];
-          let contributingFactorGuess: string | undefined;
-
-          for (const incident of similarIncidents) {
-            const similarity = Math.round(incident.similarity * 100);
-            findings.push(
-              `Similar incident (${similarity}% match): ${incident.incident_summary.substring(0, 200)}...`
-            );
-
-            if (incident.contributing_factor && !contributingFactorGuess) {
-              contributingFactorGuess = incident.contributing_factor;
-            }
-          }
-
-          const avgSimilarity = similarIncidents.reduce((sum, i) => sum + i.similarity, 0) / similarIncidents.length;
-
           return {
             source: 'historian/similar-incidents',
-            findings,
-            contributingFactor: contributingFactorGuess,
-            confidence: Math.min(0.9, avgSimilarity),
+            findings: matched.map(pb => {
+              const lesson = extractLesson(pb.content);
+              return `Similar past incident: ${pb.description}${lesson ? ` Lesson: ${lesson}` : ''}`;
+            }),
+            confidence: 0.7,
           };
         },
       }),
     },
 
     onLoopComplete: async (loopResult: LoopResult, ctx: AgentContext) => {
-      if (!sqlite) {
-        return;
-      }
-
       if (!loopResult.decision || loopResult.decision.action === 'no-op') {
-        ctx.logger.debug('[historian] Skipping storage: no action taken');
         return;
       }
 
-      if (loopResult.actionResults.length === 0) {
-        ctx.logger.debug('[historian] Skipping storage: no action results');
-        return;
-      }
-
-      const hasSuccessfulAction = loopResult.actionResults.some(r => r.success);
-      if (!hasSuccessfulAction) {
-        ctx.logger.debug('[historian] Skipping storage: no successful actions');
+      if (!loopResult.actionResults.some(r => r.success)) {
+        ctx.logger.debug('[historian] Skipping record: no successful actions');
         return;
       }
 
       if (loopResult.decision.confidence < minConfidence) {
-        ctx.logger.debug(`[historian] Skipping storage: confidence ${loopResult.decision.confidence} < ${minConfidence}`);
+        ctx.logger.debug(
+          `[historian] Skipping record: confidence ${loopResult.decision.confidence} < ${minConfidence}`
+        );
         return;
       }
 
-      if (!includeHighRisk && (loopResult.decision.risk === 'high' || loopResult.decision.risk === 'critical')) {
-        ctx.logger.debug(`[historian] Skipping storage: high-risk action (${loopResult.decision.risk})`);
+      const risk = loopResult.decision.risk;
+      if (!includeHighRisk && (risk === 'high' || risk === 'critical')) {
+        ctx.logger.debug(`[historian] Skipping record: ${risk}-risk action`);
         return;
       }
 
-      const incidentSummary = generateIncidentSummary(loopResult);
-      const contributingFactorSummary = extractContributingFactor(loopResult);
-      const resolutionSummary = generateResolutionSummary(loopResult);
+      const date = new Date();
+      const record: IncidentRecord = {
+        id: incidentId(loopResult.decision.action, date),
+        narrative: await buildNarrative(loopResult, ctx, useLLM),
+        sources: uniqueSources(loopResult),
+        loopResult,
+        date,
+      };
 
-      const tableName = sqlite.getNamespacedTable('historian', INCIDENTS_TABLE);
+      const markdown = renderIncidentMarkdown(record);
+      const filePath = join(dir, `${record.id}.md`);
 
-      const result = sqlite.run(
-        `INSERT INTO ${tableName} (
-          agent_id, loop_iteration, incident_summary, contributing_factor, resolution_summary,
-          decision_confidence, decision_risk, action_success,
-          observations_json, situation_json, decision_json, action_results_json
-        ) VALUES (
-          $agent_id, $loop_iteration, $incident_summary, $contributing_factor, $resolution_summary,
-          $decision_confidence, $decision_risk, $action_success,
-          $observations_json, $situation_json, $decision_json, $action_results_json
-        )`,
-        {
-          agent_id: ctx.agent.id,
-          loop_iteration: ctx.loop.iteration,
-          incident_summary: incidentSummary,
-          contributing_factor: contributingFactorSummary,
-          resolution_summary: resolutionSummary,
-          decision_confidence: loopResult.decision.confidence,
-          decision_risk: loopResult.decision.risk,
-          action_success: hasSuccessfulAction ? 1 : 0,
-          observations_json: JSON.stringify(loopResult.observations),
-          situation_json: loopResult.situation ? JSON.stringify(loopResult.situation) : null,
-          decision_json: JSON.stringify(loopResult.decision),
-          action_results_json: JSON.stringify(loopResult.actionResults),
-        }
-      );
+      // Round-trip through the real parser before writing, so a serialization
+      // bug fails loudly here instead of producing files the loader skips.
+      const playbook = parsePlaybook(markdown, {
+        source: 'filesystem',
+        sourcePath: filePath,
+        pluginId: 'historian',
+      });
 
-      const incidentId = result.lastInsertRowid;
+      await Bun.write(filePath, markdown);
 
-      if (embedding && sqlite.vecEnabled) {
-        try {
-          const vector = await embedding.embed(incidentSummary);
-          const embeddingsTable = sqlite.getNamespacedTable('historian', EMBEDDINGS_TABLE);
+      // Make the incident matchable immediately, without an agent restart.
+      ctx.playbooks.push(playbook);
 
-          sqlite.run(
-            `INSERT INTO ${embeddingsTable} (incident_id, embedding) VALUES ($incident_id, $embedding)`,
-            {
-              incident_id: incidentId,
-              embedding: JSON.stringify(vector),
-            }
-          );
-
-          ctx.logger.info(`[historian] Stored incident #${incidentId} with embedding`);
-        } catch (err) {
-          ctx.logger.warn(`[historian] Failed to store embedding for incident #${incidentId}:`, err);
-        }
-      } else {
-        ctx.logger.info(`[historian] Stored incident #${incidentId} (no embedding)`);
-      }
+      ctx.logger.info(`[historian] Recorded incident: ${record.narrative.description} -> ${filePath}`);
     },
   });
 
-  function getIncidentCount(ctx: AgentContext): number {
-    if (!sqlite) {
-      return 0;
-    }
-
-    const tableName = sqlite.getNamespacedTable('historian', INCIDENTS_TABLE);
-    const result = sqlite.get<{ count: number }>(`SELECT COUNT(*) as count FROM ${tableName}`);
-    return result?.count ?? 0;
-  }
-
-  async function querySimilarIncidents(
-    ctx: AgentContext,
-    queryText: string,
-    k: number
-  ): Promise<RetrievedIncident[]> {
-    if (!sqlite) {
-      return [];
-    }
-
-    const incidentsTable = sqlite.getNamespacedTable('historian', INCIDENTS_TABLE);
-
-    if (embedding && sqlite.vecEnabled) {
-      try {
-        const queryVector = await embedding.embed(queryText);
-        const embeddingsTable = sqlite.getNamespacedTable('historian', EMBEDDINGS_TABLE);
-
-        const results = sqlite.query<{
-          incident_id: number;
-          distance: number;
-        }>(
-          `SELECT incident_id, distance
-           FROM ${embeddingsTable}
-           WHERE embedding MATCH $query
-           ORDER BY distance
-           LIMIT $k`,
-          {
-            query: JSON.stringify(queryVector),
-            k,
-          }
-        );
-
-        if (results.length === 0) {
-          return [];
-        }
-
-        const incidentIds = results.map(r => r.incident_id);
-        const distanceMap = new Map(results.map(r => [r.incident_id, r.distance]));
-
-        const incidents = sqlite.query<StoredIncident>(
-          `SELECT * FROM ${incidentsTable} WHERE id IN (${incidentIds.join(',')})`
-        );
-
-        return incidents.map(incident => ({
-          ...incident,
-          similarity: 1 - (distanceMap.get(incident.id) ?? 1),
-        }));
-      } catch (err) {
-        ctx.logger.warn('[historian] Vector search failed, falling back to text search:', err);
-      }
-    }
-
-    const keywords = queryText
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(w => w.length > 3)
-      .slice(0, 10);
-
-    if (keywords.length === 0) {
-      return sqlite.query<StoredIncident>(
-        `SELECT * FROM ${incidentsTable} ORDER BY created_at DESC LIMIT $k`,
-        { k }
-      ).map(incident => ({ ...incident, similarity: 0.5 }));
-    }
-
-    const likeConditions = keywords.map((_, i) => `incident_summary LIKE $kw${i}`).join(' OR ');
-    const params: Record<string, string | number> = { k };
-    keywords.forEach((kw, i) => {
-      params[`kw${i}`] = `%${kw}%`;
-    });
-
-    const incidents = sqlite.query<StoredIncident>(
-      `SELECT * FROM ${incidentsTable}
-       WHERE ${likeConditions}
-       ORDER BY created_at DESC
-       LIMIT $k`,
-      params
-    );
-
-    return incidents.map(incident => {
-      const summaryLower = incident.incident_summary.toLowerCase();
-      const matchCount = keywords.filter(kw => summaryLower.includes(kw)).length;
-      const similarity = matchCount / keywords.length;
-      return { ...incident, similarity };
-    });
-  }
+  return plugin;
 };
+
+function isIncident(playbook: Playbook): boolean {
+  return playbook.pluginId === 'historian' || playbook.id.startsWith('incident-');
+}
+
+/** Pull the text of the "## Lesson" section out of an incident body. */
+function extractLesson(content: string): string | undefined {
+  const match = content.match(/## Lesson\s*\n+([^#]*)/);
+  return match ? singleLine(match[1]!) || undefined : undefined;
+}
+
+/** Assessments produced by the historian itself — excluded from recorded narratives. */
+function externalAssessments(loopResult: LoopResult): SituationAssessment[] {
+  return loopResult.situation?.assessments?.filter(a => !a.source.startsWith('historian/')) ?? [];
+}
+
+async function buildNarrative(
+  loopResult: LoopResult,
+  ctx: AgentContext,
+  useLLM: boolean
+): Promise<IncidentNarrative> {
+  if (useLLM && ctx.llm) {
+    try {
+      const narrative = await ctx.llm.generateStructured(llmPrompt(loopResult), NarrativeSchema);
+      return {
+        description: singleLine(narrative.description),
+        keywords: sanitizeKeywords(narrative.keywords),
+        lesson: narrative.lesson.trim(),
+      };
+    } catch (error) {
+      ctx.logger.warn('[historian] LLM narrative generation failed, using fallback:', error);
+    }
+  }
+
+  return fallbackNarrative(loopResult);
+}
+
+function llmPrompt(loopResult: LoopResult): string {
+  const { situation, decision, actionResults } = loopResult;
+  const assessments = externalAssessments(loopResult);
+  return [
+    'An automated reliability agent just resolved a production incident. Write a record of it for future incident response.',
+    '',
+    `Situation: ${situation?.summary ?? 'unknown'}`,
+    `Findings: ${assessments.flatMap(a => a.findings).join('; ') || 'none'}`,
+    `Contributing factor: ${assessments.map(a => a.contributingFactor).filter(Boolean).join('; ') || 'unknown'}`,
+    `Resolution action: ${decision?.action} (rationale: ${decision?.rationale})`,
+    `Outcome: ${actionResults.map(r => `${r.action}: ${r.success ? 'succeeded' : `failed (${r.error})`}`).join('; ')}`,
+    '',
+    'Return:',
+    '- description: one line, what broke and what fixed it',
+    `- keywords: 5-${MAX_KEYWORDS} generous lowercase trigger terms a similar future incident would contain (include synonyms, e.g. both "5xx" and "error rate"; single words or short phrases; no commas inside a keyword)`,
+    '- lesson: 1-3 sentences a future investigation should know before acting',
+  ].join('\n');
+}
+
+function fallbackNarrative(loopResult: LoopResult): IncidentNarrative {
+  const { situation, decision, observations } = loopResult;
+  const assessments = externalAssessments(loopResult);
+  // Without external orienters the situation summary is placeholder text
+  // (or the historian's own findings) — the decision rationale describes
+  // the incident better in that case.
+  const summary = assessments.length > 0 && situation?.summary
+    ? situation.summary
+    : decision?.rationale ?? situation?.summary ?? 'Incident';
+  const description = singleLine(`${summary} — resolved by ${decision?.action}`);
+
+  // Mine observation data values (not keys — keys like "status" appear in
+  // every observation and would make the incident match everything), since
+  // observation text is what the matcher checks future keywords against.
+  const text = [
+    summary,
+    ...assessments.flatMap(a => a.findings),
+    ...assessments.map(a => a.contributingFactor).filter((f): f is string => !!f),
+    ...observations.flatMap(o => [...o.source.split(/[/:]/), ...stringValues(o.data)]),
+  ].join(' ');
+
+  const keywords = sanitizeKeywords([
+    ...decision!.action.split(/[:\-_]/),
+    ...extractKeywords(text),
+  ]);
+
+  const lesson = singleLine(
+    `Resolved by ${decision?.action}: ${decision?.rationale ?? 'no rationale recorded'}`
+  );
+
+  return { description, keywords, lesson };
+}
+
+const STOPWORDS = new Set([
+  'the', 'and', 'for', 'was', 'are', 'not', 'has', 'had', 'its',
+  'this', 'that', 'with', 'from', 'have', 'been', 'were', 'when', 'then',
+  'than', 'them', 'they', 'their', 'there', 'would', 'could', 'should',
+  'after', 'before', 'because', 'found', 'into', 'over', 'under', 'while',
+]);
+
+function extractKeywords(text: string): string[] {
+  const counts = new Map<string, number>();
+  for (const raw of text.toLowerCase().split(/[^a-z0-9]+/)) {
+    if (raw.length < 3 || STOPWORDS.has(raw)) continue;
+    counts.set(raw, (counts.get(raw) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([word]) => word);
+}
+
+/** Recursively collect string values from observation data. */
+function stringValues(data: unknown): string[] {
+  const out: string[] = [];
+  const visit = (v: unknown) => {
+    if (typeof v === 'string') out.push(v);
+    else if (Array.isArray(v)) v.forEach(visit);
+    else if (v && typeof v === 'object') Object.values(v).forEach(visit);
+  };
+  visit(data);
+  return out;
+}
+
+/** Lowercase, strip characters that would break the inline-array frontmatter, dedupe, cap. */
+function sanitizeKeywords(keywords: string[]): string[] {
+  const cleaned = keywords
+    .map(kw => kw.toLowerCase().replace(/[,[\]"'\n]/g, ' ').replace(/\s+/g, ' ').trim())
+    .filter(kw => kw.length >= 2);
+  return Array.from(new Set(cleaned)).slice(0, MAX_KEYWORDS);
+}
+
+function uniqueSources(loopResult: LoopResult): string[] {
+  return Array.from(new Set(loopResult.observations.map(o => o.source))).slice(0, 8);
+}
+
+function incidentId(action: string, date: Date): string {
+  const stamp = date.toISOString().replace(/[-:T]/g, '').slice(0, 14); // yyyymmddhhmmss
+  const slug = action.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return `incident-${stamp}-${slug}`;
+}
+
+function singleLine(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+export function renderIncidentMarkdown(record: IncidentRecord): string {
+  const { narrative, sources, loopResult, date } = record;
+  const { decision, actionResults } = loopResult;
+
+  const assessments = externalAssessments(loopResult);
+  const findings = assessments.flatMap(a => a.findings);
+  const factors = assessments
+    .map(a => a.contributingFactor)
+    .filter((f): f is string => !!f);
+
+  const lines = [
+    '---',
+    `name: ${singleLine(narrative.description).slice(0, 80)}`,
+    `description: ${singleLine(narrative.description)}`,
+    'trigger:',
+    `  keywords: [${narrative.keywords.join(', ')}]`,
+    ...(sources.length > 0 ? [`  sources: [${sources.join(', ')}]`] : []),
+    `priority: ${INCIDENT_PRIORITY}`,
+    `recordedBy: historian`,
+    `recordedAt: ${date.toISOString()}`,
+    `resolvedBy: ${decision?.action}`,
+    `confidence: ${decision?.confidence}`,
+    ...(decision?.risk ? [`risk: ${decision.risk}`] : []),
+    '---',
+    '',
+    `# ${singleLine(narrative.description)}`,
+    '',
+    '## What happened',
+    '',
+    // situation.summary includes the historian's own orienter findings, so
+    // use the narrative description as the incident statement instead.
+    singleLine(narrative.description),
+    ...(findings.length > 0 ? ['', ...findings.map(f => `- ${singleLine(f)}`)] : []),
+    ...(factors.length > 0
+      ? ['', '## Contributing factor', '', ...factors.map(f => `- ${singleLine(f)}`)]
+      : []),
+    '',
+    '## Resolution',
+    '',
+    `Action \`${decision?.action}\` (confidence ${decision?.confidence}, risk ${decision?.risk ?? 'unknown'}).`,
+    `Rationale: ${singleLine(decision?.rationale ?? 'not recorded')}`,
+    '',
+    ...actionResults.map(r =>
+      `- \`${r.action}\`: ${r.success ? `succeeded in ${r.duration}ms` : `failed (${singleLine(r.error ?? 'unknown error')})`}`
+    ),
+    '',
+    '## Lesson',
+    '',
+    narrative.lesson,
+    '',
+  ];
+
+  return lines.join('\n');
+}
