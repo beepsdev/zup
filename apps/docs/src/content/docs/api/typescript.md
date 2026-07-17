@@ -461,31 +461,7 @@ type SQLiteConfig = {
 };
 ```
 
-See [SQLite & Embeddings](/docs/integrations/sqlite/) for the full `SQLiteCapability` method reference.
-
-### createEmbeddingCapability(config, logger?)
-
-Create an embedding capability for vector search.
-
-```ts
-function createEmbeddingCapability(
-  config: EmbeddingConfig,
-  logger?: Logger
-): EmbeddingCapability
-
-type EmbeddingConfig = {
-  provider: 'openai';
-  apiKey: string;
-  model?: string;          // Default: 'text-embedding-3-small'
-  dimensions?: number;     // Default: 1536
-};
-
-type EmbeddingCapability = {
-  embed(text: string): Promise<number[]>;
-  embedBatch(texts: string[]): Promise<number[][]>;
-  dimensions: number;
-};
-```
+See [SQLite](/docs/integrations/sqlite/) for the full `SQLiteCapability` method reference.
 
 ---
 
@@ -756,7 +732,6 @@ All factory functions work independently of the agent. You can use them in scrip
 import {
   createStateStore,
   createSQLiteCapability,
-  createEmbeddingCapability,
   createLLMCapability,
 } from 'zupdev';
 

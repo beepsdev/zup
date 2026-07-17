@@ -1,9 +1,9 @@
 ---
-title: SQLite & Embeddings
-description: SQLite database capability, plugin table namespacing, WAL mode, vector search with sqlite-vec, and the embedding provider for RAG.
+title: SQLite
+description: SQLite database capability, plugin table namespacing, WAL mode, and vector search with sqlite-vec.
 ---
 
-Zup provides an optional SQLite database layer built on Bun's native `bun:sqlite`. Plugins use it to store structured data with automatic table namespacing. When combined with the `sqlite-vec` extension and an embedding provider, it enables vector similarity search for RAG workflows.
+Zup provides an optional SQLite database layer built on Bun's native `bun:sqlite`. Plugins use it to store structured data with automatic table namespacing, and the state store can use it for [database persistence](/docs/state/). When the `sqlite-vec` extension is available, custom plugins can also use vector similarity search.
 
 ## Configuring SQLite
 
@@ -59,8 +59,8 @@ type SQLiteCapability = {
 **`getNamespacedTable(pluginId, tableName)`** -- Returns the full table name for a plugin, formatted as `pluginId_tableName`. Non-alphanumeric characters (except underscores) are replaced with `_`.
 
 ```ts
-ctx.sqlite.getNamespacedTable('historian', 'incidents');
-// => 'historian_incidents'
+ctx.sqlite.getNamespacedTable('my-plugin', 'events');
+// => 'my_plugin_events'
 
 ctx.sqlite.getNamespacedTable('http-monitor', 'check_results');
 // => 'http_monitor_check_results'
@@ -129,7 +129,7 @@ Every plugin table is prefixed with the plugin ID to prevent name collisions. Th
 
 | Plugin ID | Table name | Full table name |
 |---|---|---|
-| `historian` | `incidents` | `historian_incidents` |
+| `my-plugin` | `events` | `my_plugin_events` |
 | `http-monitor` | `check_results` | `http_monitor_check_results` |
 | `core` | `state` | `core_state` |
 
@@ -150,7 +150,7 @@ WAL mode creates two additional files alongside the database: `<dbname>-wal` and
 
 ## Vector search with sqlite-vec
 
-The `sqlite-vec` extension adds vector similarity search to SQLite, enabling RAG (Retrieval-Augmented Generation) workflows. When `enableVec` is `true`, Zup attempts to load the extension at startup.
+The `sqlite-vec` extension adds vector similarity search to SQLite. No built-in plugin uses it, but it is available to custom plugins that want nearest-neighbor search over their own embeddings. When `enableVec` is `true`, Zup attempts to load the extension at startup.
 
 ### Extension loading
 
@@ -160,7 +160,7 @@ The loading process tries multiple paths in order:
 2. `vec0` from the default extension search path.
 3. `sqlite-vec` from the default extension search path.
 
-If all attempts fail, `vecEnabled` is set to `false` and a warning is logged. The agent continues to work normally -- plugins that depend on vector search fall back to text-based search.
+If all attempts fail, `vecEnabled` is set to `false` and a warning is logged. The agent continues to work normally -- custom plugins should check `ctx.sqlite.vecEnabled` and fall back to another strategy (e.g., text search) when it is `false`.
 
 ### Creating a vector table
 
@@ -198,80 +198,16 @@ const results = ctx.sqlite.query<{ item_id: number; distance: number }>(
 
 The `MATCH` clause performs a nearest-neighbor search. Results are ordered by distance (lower is more similar). To convert distance to a similarity score: `similarity = 1 - distance`.
 
-## Embedding capability
+Zup does not ship an embedding provider -- generate the vectors yourself (e.g., with your embedding provider's SDK) and store them via the capability.
 
-The embedding capability generates vector representations of text for use with sqlite-vec. It currently supports OpenAI's embedding models.
+## Who uses SQLite
 
-### Configuration
+Nothing in Zup requires SQLite. When configured, it is used by:
 
-```ts
-import { createEmbeddingCapability } from 'zupdev';
+- **State persistence** -- set `statePersistence.type: 'database'` to persist the agent's [state store](/docs/state/) in the SQLite database.
+- **Custom plugins** -- anything you build that wants durable, queryable storage via `ctx.sqlite`.
 
-const embedding = createEmbeddingCapability({
-  provider: 'openai',
-  apiKey: process.env.OPENAI_API_KEY!,
-  model: 'text-embedding-3-small',    // Optional, this is the default
-  dimensions: 1536,                    // Optional, this is the default
-});
-```
-
-### EmbeddingConfig reference
-
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `provider` | `'openai'` | -- | Embedding provider (currently only OpenAI). |
-| `apiKey` | `string` | -- | OpenAI API key. |
-| `model` | `string` | `'text-embedding-3-small'` | Embedding model name. |
-| `dimensions` | `number` | `1536` | Output vector dimensions. Must match your vector table definition. |
-
-### EmbeddingCapability methods
-
-```ts
-type EmbeddingCapability = {
-  embed(text: string): Promise<number[]>;
-  embedBatch(texts: string[]): Promise<number[][]>;
-  dimensions: number;
-};
-```
-
-**`embed(text)`** -- Generate an embedding vector for a single text string. Returns a `number[]` of length `dimensions`.
-
-**`embedBatch(texts)`** -- Generate embeddings for multiple texts in a single API call. More efficient than calling `embed()` in a loop.
-
-**`dimensions`** -- The configured vector dimension, useful for creating matching vector tables.
-
-## How the historian uses SQLite and embeddings
-
-The `historian` plugin is the primary consumer of both SQLite and embeddings. It demonstrates the full RAG workflow:
-
-1. **Storage (onLoopComplete):** After each loop with a successful, high-confidence action, the historian stores the incident summary, contributing factor, resolution, and full loop data in the `historian_incidents` table. If embeddings are configured, it also generates and stores a vector in the `historian_incident_embeddings` table.
-
-2. **Retrieval (orient phase):** During the orient phase, the historian's orienter takes the current observations, generates an embedding, and performs a vector similarity search against past incidents. The most similar incidents are included in the `SituationAssessment` to give the agent historical context.
-
-3. **Fallback:** When vector search is unavailable (no sqlite-vec or no embedding provider), the historian falls back to keyword-based text search using SQL `LIKE` clauses.
-
-### Configuration
-
-```ts
-import { createAgent } from 'zupdev';
-import { historianPlugin } from 'zupdev/plugins/historian';
-
-const agent = await createAgent({
-  name: 'my-agent',
-  sqlite: { path: './zup.db', enableVec: true },
-  plugins: [
-    historianPlugin({
-      minConfidence: 0.75,         // Only store incidents above this confidence
-      includeHighRisk: false,      // Skip storing high/critical risk actions
-      maxSimilarIncidents: 5,      // Max incidents returned during RAG
-      embedding: {
-        provider: 'openai',
-        apiKey: process.env.OPENAI_API_KEY!,
-      },
-    }),
-  ],
-});
-```
+The [historian](/docs/plugins/historian/) plugin does *not* use SQLite -- it records incident memory as plain markdown files.
 
 ## Using SQLite directly
 

@@ -1,6 +1,6 @@
 import type { LoopResult } from '../../types/index';
 
-export type ScribeOptions = {
+export type HistorianOptions = {
   /**
    * Directory where incident markdown files are written and loaded from.
    * Default: './playbooks/incidents'
@@ -27,6 +27,12 @@ export type ScribeOptions = {
    * Default: 200
    */
   maxIncidents?: number;
+
+  /**
+   * Maximum number of similar past incidents surfaced as findings by the
+   * historicalContext orienter each loop. Default: 5
+   */
+  maxSimilarIncidents?: number;
 };
 
 /** The pieces of an incident record that the LLM (or fallback) generates. */

@@ -1,6 +1,6 @@
 {
   "name": "zupdev",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Open source reliability agent that runs the OODA loop on production systems",
   "type": "module",
   "license": "MIT",
@@ -41,7 +41,6 @@
     "./plugins/investigation-orienter": "./src/plugins/investigation-orienter/index.ts",
     "./plugins/investigation-orienter/tools": "./src/plugins/investigation-orienter/tools.ts",
     "./plugins/kubernetes": "./src/plugins/kubernetes/index.ts",
-    "./plugins/scribe": "./src/plugins/scribe/index.ts",
     "./plugins/vercel-deploys": "./src/plugins/vercel-deploys/index.ts",
     "./plugins/example": "./src/plugins/example.ts"
   },
@@ -65,7 +64,6 @@
     "ai": "^6.0.99",
     "defu": "^6.1.4",
     "google-auth-library": "^9.11.0",
-    "openai": "^6.25.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

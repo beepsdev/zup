@@ -10,7 +10,7 @@ Zup is an open-source reliability agent framework that runs the OODA loop (Obser
 | Capability | Description |
 |---|---|
 | **Observe** | Monitor HTTP endpoints, Kubernetes clusters, Fly.io machines, Vercel deployments, Cloud Run services, and GitHub activity through built-in plugins. |
-| **Orient** | Correlate observations with historical incidents using RAG-powered pattern matching. Run deep LLM-driven investigations with tool calling. |
+| **Orient** | Correlate observations with recorded past incidents and playbooks via trigger matching. Run deep LLM-driven investigations with tool calling. |
 | **Decide** | Choose safe remediation actions based on situation assessments, risk levels, and confidence thresholds. |
 | **Act** | Execute actions automatically or queue them for human approval. Rollback support and dry-run previews included. |
 | **Extend** | Write plugins that hook into any phase. Add custom observers, orienters, strategies, actions, and API endpoints. |
